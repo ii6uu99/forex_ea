@@ -53,6 +53,7 @@ void OnTick()
       return;
      }
 
+
    MqlRates PriceInformation[];  //create an array for the price data
 
    ArraySetAsSeries(PriceInformation,true);  //sort the array current candle downwards
@@ -92,11 +93,15 @@ void OnTick()
 
 // If price is within bounds reset flag
    if(latest_price.bid>=PriceInformation[LowestCandle].low && latest_price.ask<=PriceInformation[HighestCandle].high)
+     {
       outsideBounds = false;
+     }
 
 // If no trade but the price is outside bounds, return
    if(outsideBounds)
+     {
       return;
+     }
 
 //--- Get the last price quote using the MQL5 MqlTick Structure
 
@@ -145,9 +150,34 @@ void PlaceTrade(double price,int STP,int TKP,int orderType)
    mrequest.type_filling = ORDER_FILLING_FOK;                          // Order execution type
    mrequest.deviation=100;                                           // Deviation from current price
 //--- send order
-   OrderSend(mrequest,mresult);
+
+// If enough volume, send order
+   if(EnoughVolume())
+     {
+      OrderSend(mrequest,mresult);
+     }
   }
 //+------------------------------------------------------------------+
+
+
+
+
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+bool EnoughVolume()
+  {
+   double myPriceArray[];
+   int VolumeDefinition = iVolumes(_Symbol, _Period, VOLUME_TICK);
+   ArraySetAsSeries(myPriceArray, true);
+
+   CopyBuffer(VolumeDefinition, 0, 0, 3, myPriceArray);
+   float CurrentVolume = myPriceArray[0];
+   float LastVolme = myPriceArray[1];
+
+   return CurrentVolume > MinVolume;
+  }
+
 
 //+------------------------------------------------------------------+
 //|                                                                  |
