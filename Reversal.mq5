@@ -10,9 +10,10 @@
 //--- input parameters
 input double RiskFactor=0.2;
 input int      MinBars=24;
-input int      MaxBars=72;
+input int      MaxBars=96;
 input double   MaxVolume=2000;
 input double TPMultiplier=0.5;
+input double SLMultiplier=1.0;
 
 bool insideBounds=false;
 
@@ -109,9 +110,9 @@ void OnTick()
      {
       double TPdiff = PriceInformation[HighestCandle].high-latest_price.ask;
       double TP = latest_price.ask + TPMultiplier*TPdiff;
-      double SL = latest_price.ask - TPMultiplier*TPdiff;
+      double SL = latest_price.ask - SLMultiplier*TPdiff;
 
-      PlaceTrade(latest_price.bid,SL,TP,ORDER_TYPE_BUY);
+      PlaceTrade(latest_price.ask,SL,TP,ORDER_TYPE_BUY);
 
       insideBounds = false;
      }
@@ -121,9 +122,9 @@ void OnTick()
      {
       double TPdiff = latest_price.bid-PriceInformation[LowestCandle].low;
       double TP = latest_price.bid - TPMultiplier*TPdiff;
-      double SL = latest_price.bid + TPMultiplier*TPdiff;
+      double SL = latest_price.bid + SLMultiplier*TPdiff;
 
-      PlaceTrade(latest_price.ask,SL,TP,ORDER_TYPE_SELL);
+      PlaceTrade(latest_price.bid,SL,TP,ORDER_TYPE_SELL);
 
       insideBounds = false;
      }
@@ -148,7 +149,7 @@ void PlaceTrade(double price,double SL,double TP,int orderType)
    mrequest.magic = 34567;                                        // Order Magic Number
    mrequest.type= orderType;                                     // Sell Order
    mrequest.type_filling = ORDER_FILLING_FOK;                          // Order execution type
-   mrequest.deviation=10;                                           // Deviation from current price
+   mrequest.deviation=100;                                           // Deviation from current price
 //--- send order
 
    OrderSend(mrequest,mresult);
