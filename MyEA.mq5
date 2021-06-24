@@ -13,16 +13,21 @@ input int      MaxBars=240;
 input double   MinVolume=2000;
 input int TakeProfit=500;
 input int StopLoss=500;
+input int ADRLookBack=7;
+
+bool outsideBounds=false;
 
 //+------------------------------------------------------------------+
 //| Expert initialization function                                   |
 //+------------------------------------------------------------------+
 int OnInit()
   {
-  // Check MaxBars > MinBars
-  if(!(MaxBars>MinBars))
-  {Alert("Set MaxBars higher than MinBars");
-  return(INIT_FAILED);}
+// Check MaxBars > MinBars
+   if(!(MaxBars>MinBars))
+     {
+      Alert("Set MaxBars higher than MinBars");
+      return(INIT_FAILED);
+     }
 
 //---
    return(INIT_SUCCEEDED);
@@ -53,7 +58,7 @@ void OnTick()
    ArraySetAsSeries(PriceInformation,true);  //sort the array current candle downwards
    int Data = CopyRates(Symbol(),Period(),MinBars,MaxBars-MinBars,PriceInformation); //fill the array with price data
 
-   // Create Resistance Line
+// Create Resistance Line
    ObjectCreate(0,"Resistance",OBJ_HLINE,0,0,0); //set object properties
    ObjectSetInteger(0,"Resistance",OBJPROP_WIDTH,2);              //set object width
    ObjectSetInteger(0,"Resistance",OBJPROP_COLOR,clrRed);      //set object colour
@@ -64,7 +69,7 @@ void OnTick()
    HighestCandle = ArrayMaximum(High,0,MaxBars-MinBars);  //get the highest candle price
    ObjectMove(0,"Resistance",0,0,PriceInformation[HighestCandle].high);     //move the line
 
-   // Create Support Line
+// Create Support Line
    ObjectCreate(0,"Support",OBJ_HLINE,0,0,0); //set object properties
    ObjectSetInteger(0,"Support",OBJPROP_WIDTH,2);              //set object width
    ObjectSetInteger(0,"Support",OBJPROP_COLOR,clrBlue);      //set object colour
@@ -75,7 +80,9 @@ void OnTick()
    LowestCandle = ArrayMinimum(Low,0,MaxBars-MinBars);  //get the lowest candle price
    ObjectMove(0,"Support",0,0,PriceInformation[LowestCandle].low);     //move the line
 
-//--- Get the last price quote using the MQL5 MqlTick Structure
+   if(PositionSelect(_Symbol)==true)   // if we already have an opened position, return
+      return;
+
    MqlTick latest_price;     // To be used for getting recent/latest price quotes
    if(!SymbolInfoTick(_Symbol,latest_price))
      {
@@ -83,43 +90,34 @@ void OnTick()
       return;
      }
 
-    bool Buy_opened=false;  // variable to hold the result of Buy opened position
-    bool Sell_opened=false; // variable to hold the result of Sell opened position
-    
-    if (PositionSelect(_Symbol) ==true)  // we have an opened position
-    {
-         if (PositionGetInteger(POSITION_TYPE) == POSITION_TYPE_BUY)
-         {
-            Buy_opened = true;  //It is a Buy
-         }
-         else if(PositionGetInteger(POSITION_TYPE) == POSITION_TYPE_SELL)
-         {
-            Sell_opened = true; // It is a Sell
-         }
-    }
-    
-   // Place Sell if price breaks support
+// If price is within bounds reset flag
+   if(latest_price.bid>=PriceInformation[LowestCandle].low && latest_price.ask<=PriceInformation[HighestCandle].high)
+      outsideBounds = false;
+
+// If no trade but the price is outside bounds, return
+   if(outsideBounds)
+      return;
+
+//--- Get the last price quote using the MQL5 MqlTick Structure
+
+
+// Price is outsideBounds (either high or low) and we dont have an active trade --> go trade
+   int ADR = ComputeADR();
+
+// Place Sell if price breaks support
    if(latest_price.bid<PriceInformation[LowestCandle].low)
      {
-      // any opened Sell position?
-      if(!Sell_opened)
-        {
-         PlaceTrade(latest_price.bid,StopLoss,TakeProfit,ORDER_TYPE_SELL);
+      PlaceTrade(latest_price.bid,2*ADR,2*ADR,ORDER_TYPE_SELL);
 
-         Sell_opened = 1;
-        }
+      outsideBounds = true;
      }
-     
-        // Place Buy if price breaks resistance
+
+// Place Buy if price breaks resistance
    if(latest_price.ask>PriceInformation[HighestCandle].high)
      {
-      // any opened Buy position?
-      if(!Buy_opened)
-        {
-         PlaceTrade(latest_price.ask,500,500,ORDER_TYPE_BUY);
+      PlaceTrade(latest_price.ask,2*ADR,2*ADR,ORDER_TYPE_BUY);
 
-         Buy_opened = 1;
-        }
+      outsideBounds = true;
      }
   }
 
@@ -128,25 +126,44 @@ void OnTick()
 //+------------------------------------------------------------------+
 void PlaceTrade(double price,int STP,int TKP,int orderType)
   {
-         // Create traderequest
-         MqlTradeRequest mrequest;  // To be used for sending our trade requests
-         MqlTradeResult mresult;    // To be used to get our trade results
-         ZeroMemory(mrequest);
-         
-         if(orderType==ORDER_TYPE_BUY)
-         {STP=-1*STP;TKP=-1*TKP;}
+// Create traderequest
+   MqlTradeRequest mrequest;  // To be used for sending our trade requests
+   MqlTradeResult mresult;    // To be used to get our trade results
+   ZeroMemory(mrequest);
 
-         mrequest.action = TRADE_ACTION_DEAL;                                 // immediate order execution
-         mrequest.price = NormalizeDouble(price,_Digits);          // latest Bid price
-         mrequest.sl = NormalizeDouble(price + STP*_Point,_Digits); // Stop Loss
-         mrequest.tp = NormalizeDouble(price - TKP*_Point,_Digits); // Take Profit
-         mrequest.symbol = _Symbol;                                         // currency pair
-         mrequest.volume = 0.02;                                            // number of lots to trade
-         mrequest.magic = 34567;                                        // Order Magic Number
-         mrequest.type= orderType;                                     // Sell Order
-         mrequest.type_filling = ORDER_FILLING_FOK;                          // Order execution type
-         mrequest.deviation=100;                                           // Deviation from current price
-         //--- send order
-         OrderSend(mrequest,mresult);
+   if(orderType==ORDER_TYPE_BUY)
+     {STP=-1*STP; TKP=-1*TKP;}
+
+   mrequest.action = TRADE_ACTION_DEAL;                                 // immediate order execution
+   mrequest.price = NormalizeDouble(price,_Digits);          // latest Bid price
+   mrequest.sl = NormalizeDouble(price + STP*_Point,_Digits); // Stop Loss
+   mrequest.tp = NormalizeDouble(price - TKP*_Point,_Digits); // Take Profit
+   mrequest.symbol = _Symbol;                                         // currency pair
+   mrequest.volume = 0.02;                                            // number of lots to trade
+   mrequest.magic = 34567;                                        // Order Magic Number
+   mrequest.type= orderType;                                     // Sell Order
+   mrequest.type_filling = ORDER_FILLING_FOK;                          // Order execution type
+   mrequest.deviation=100;                                           // Deviation from current price
+//--- send order
+   OrderSend(mrequest,mresult);
+  }
+//+------------------------------------------------------------------+
+
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+int ComputeADR()
+  {
+   MqlRates adrBars[];  //create an array for the price data
+
+   CopyRates(Symbol(),PERIOD_D1,1,ADRLookBack+1,adrBars); //fill the array with price data// Get bars
+
+   double sum=0.0;
+   for(int i=0; i<ADRLookBack; i++)
+     {
+      sum = sum + MathAbs(adrBars[i].close-adrBars[i].open);
+     }
+
+   return (sum/ADRLookBack/_Point);
   }
 //+------------------------------------------------------------------+
