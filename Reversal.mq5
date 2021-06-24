@@ -9,11 +9,13 @@
 
 //--- input parameters
 input double RiskFactor=0.2;
-input int      MinBars=24;
-input int      MaxBars=96;
-input double   MaxVolume=2000;
+input int      MinBars=12;
+input int      MaxBars=48;
+input double   MaxVolume=1000;
 input double TPMultiplier=0.5;
-input double SLMultiplier=1.0;
+input double SLMultiplier=0.5;
+input int START_HOUR = 20;
+input int STOP_HOUR = 3;
 
 bool insideBounds=false;
 
@@ -80,6 +82,12 @@ void OnTick()
    CopyLow(Symbol(),Period(),MinBars,MaxBars-MinBars,Low);    //fill the array with the high prices
    LowestCandle = ArrayMinimum(Low,0,MaxBars-MinBars);  //get the lowest candle price
    ObjectMove(0,"Support",0,0,PriceInformation[LowestCandle].low);     //move the line
+
+// If timeofday is outside numbers return
+   MqlDateTime Time;
+   TimeCurrent(Time);
+   if(Time.hour < START_HOUR && Time.hour > STOP_HOUR)
+      return;
 
    if(PositionSelect(_Symbol)==true)   // if we already have an opened position, return
       return;
@@ -170,7 +178,11 @@ bool TooMuchVolume()
    float CurrentVolume = myPriceArray[0];
    float LastVolume = myPriceArray[1];
 
-   return CurrentVolume > MaxVolume;
+   Print("-------");
+   Print("Current vol:",CurrentVolume);
+   Print("Last vol:",LastVolume);
+
+   return LastVolume > MaxVolume;
   }
 
 //+------------------------------------------------------------------+
