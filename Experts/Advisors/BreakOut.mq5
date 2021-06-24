@@ -68,6 +68,8 @@ void OnTick()
 // Create Support Line
    double support = FindSupport(PriceInformation, MinBars, MaxBars-MinBars);
    PlotHorizontal("Support", support, clrBlue);
+   
+   PlotTrend("Schuin", support, clrGreen, 25.0);
 
 
    if(PositionSelect(_Symbol)==true)   // if we already have an opened position, return

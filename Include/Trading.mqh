@@ -89,7 +89,7 @@ bool VolumeMoreThan(int threshold)
    float CurrentVolume = volumeArray[0];
    float LastVolume = volumeArray[1];
 
-   return CurrentVolume > threshold;
+   return LastVolume > threshold;
   }
 //+------------------------------------------------------------------+
 
