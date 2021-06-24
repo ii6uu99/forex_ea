@@ -11,9 +11,9 @@
 input int      MinBars=24;
 input int      MaxBars=240;
 input double   MinVolume=2000;
-input int TakeProfit=500;
-input int StopLoss=500;
 input int ADRLookBack=7;
+input int ADRMultiplierSL=1;
+input int ADRMultiplierTP=1;
 
 bool outsideBounds=false;
 
@@ -93,15 +93,15 @@ void OnTick()
 
 // If price is within bounds reset flag
    if(latest_price.bid>=PriceInformation[LowestCandle].low && latest_price.ask<=PriceInformation[HighestCandle].high)
-     {
       outsideBounds = false;
-     }
-
+     
 // If no trade but the price is outside bounds, return
    if(outsideBounds)
-     {
       return;
-     }
+     
+     // If enough volume, send order
+   if(!EnoughVolume())
+     return;
 
 //--- Get the last price quote using the MQL5 MqlTick Structure
 
@@ -112,7 +112,7 @@ void OnTick()
 // Place Sell if price breaks support
    if(latest_price.bid<PriceInformation[LowestCandle].low)
      {
-      PlaceTrade(latest_price.bid,2*ADR,2*ADR,ORDER_TYPE_SELL);
+      PlaceTrade(latest_price.bid,ADRMultiplierSL*ADR,ADRMultiplierTP*ADR,ORDER_TYPE_SELL);
 
       outsideBounds = true;
      }
@@ -120,7 +120,7 @@ void OnTick()
 // Place Buy if price breaks resistance
    if(latest_price.ask>PriceInformation[HighestCandle].high)
      {
-      PlaceTrade(latest_price.ask,2*ADR,2*ADR,ORDER_TYPE_BUY);
+      PlaceTrade(latest_price.ask,ADRMultiplierSL*ADR,ADRMultiplierTP*ADR,ORDER_TYPE_BUY);
 
       outsideBounds = true;
      }
@@ -151,16 +151,10 @@ void PlaceTrade(double price,int STP,int TKP,int orderType)
    mrequest.deviation=100;                                           // Deviation from current price
 //--- send order
 
-// If enough volume, send order
-   if(EnoughVolume())
-     {
-      OrderSend(mrequest,mresult);
-     }
+   OrderSend(mrequest,mresult);
+
   }
 //+------------------------------------------------------------------+
-
-
-
 
 //+------------------------------------------------------------------+
 //|                                                                  |
