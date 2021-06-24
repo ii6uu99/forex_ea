@@ -10,13 +10,11 @@
 //--- input parameters
 input double RiskFactor=0.2;
 input int      MinBars=24;
-input int      MaxBars=240;
-input double   MinVolume=2000;
-input int ADRLookBack=7;
-input int ADRMultiplierSL=1;
-input int ADRMultiplierTP=1;
+input int      MaxBars=72;
+input double   MaxVolume=2000;
+input double TPMultiplier=0.5;
 
-bool outsideBounds=false;
+bool insideBounds=false;
 
 //+------------------------------------------------------------------+
 //| Expert initialization function                                   |
@@ -94,62 +92,63 @@ void OnTick()
 
 // If price is within bounds reset flag
    if(latest_price.bid>=PriceInformation[LowestCandle].low && latest_price.ask<=PriceInformation[HighestCandle].high)
-      outsideBounds = false;
+      insideBounds = true;
 
 // If no trade but the price is outside bounds, return
-   if(outsideBounds)
+   if(!insideBounds)
       return;
 
 // If enough volume, send order
-   if(!EnoughVolume())
+   if(TooMuchVolume())
       return;
 
 //--- Get the last price quote using the MQL5 MqlTick Structure
 
-
-// Price is outsideBounds (either high or low) and we dont have an active trade --> go trade
-   int ADR = ComputeADR();
-
-// Place Sell if price breaks support
-   if(latest_price.bid<PriceInformation[LowestCandle].low)
+// Place Buy if price hits support
+   if(latest_price.ask<PriceInformation[LowestCandle].low)
      {
-      PlaceTrade(latest_price.bid,ADRMultiplierSL*ADR,ADRMultiplierTP*ADR,ORDER_TYPE_SELL);
+      double TPdiff = PriceInformation[HighestCandle].high-latest_price.ask;
+      double TP = latest_price.ask + TPMultiplier*TPdiff;
+      double SL = latest_price.ask - TPMultiplier*TPdiff;
 
-      outsideBounds = true;
+      PlaceTrade(latest_price.bid,SL,TP,ORDER_TYPE_BUY);
+
+      insideBounds = false;
      }
 
-// Place Buy if price breaks resistance
-   if(latest_price.ask>PriceInformation[HighestCandle].high)
+// Place Sell if price hits resistance
+   if(latest_price.bid>PriceInformation[HighestCandle].high)
      {
-      PlaceTrade(latest_price.ask,ADRMultiplierSL*ADR,ADRMultiplierTP*ADR,ORDER_TYPE_BUY);
+      double TPdiff = latest_price.bid-PriceInformation[LowestCandle].low;
+      double TP = latest_price.bid - TPMultiplier*TPdiff;
+      double SL = latest_price.bid + TPMultiplier*TPdiff;
 
-      outsideBounds = true;
+      PlaceTrade(latest_price.ask,SL,TP,ORDER_TYPE_SELL);
+
+      insideBounds = false;
      }
   }
 
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-void PlaceTrade(double price,int STP,int TKP,int orderType)
+void PlaceTrade(double price,double SL,double TP,int orderType)
   {
 // Create traderequest
    MqlTradeRequest mrequest;  // To be used for sending our trade requests
    MqlTradeResult mresult;    // To be used to get our trade results
    ZeroMemory(mrequest);
 
-   if(orderType==ORDER_TYPE_BUY)
-     {STP=-1*STP; TKP=-1*TKP;}
-
    mrequest.action = TRADE_ACTION_DEAL;                                 // immediate order execution
    mrequest.price = NormalizeDouble(price,_Digits);          // latest Bid price
-   mrequest.sl = NormalizeDouble(price + STP*_Point,_Digits); // Stop Loss
-   mrequest.tp = NormalizeDouble(price - TKP*_Point,_Digits); // Take Profit
+   mrequest.sl = NormalizeDouble(SL,_Digits); // Stop Loss
+   mrequest.tp = NormalizeDouble(TP,_Digits); // Take Profit
    mrequest.symbol = _Symbol;                                         // currency pair
    mrequest.volume = ComputeLot();                                  // number of lots to trade
    mrequest.magic = 34567;                                        // Order Magic Number
    mrequest.type= orderType;                                     // Sell Order
    mrequest.type_filling = ORDER_FILLING_FOK;                          // Order execution type
-   mrequest.deviation=100;                                           // Deviation from current price
+   mrequest.deviation=10;                                           // Deviation from current price
 //--- send order
 
    OrderSend(mrequest,mresult);
@@ -160,7 +159,7 @@ void PlaceTrade(double price,int STP,int TKP,int orderType)
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-bool EnoughVolume()
+bool TooMuchVolume()
   {
    double myPriceArray[];
    int VolumeDefinition = iVolumes(_Symbol, _Period, VOLUME_TICK);
@@ -168,29 +167,11 @@ bool EnoughVolume()
 
    CopyBuffer(VolumeDefinition, 0, 0, 3, myPriceArray);
    float CurrentVolume = myPriceArray[0];
-   float LastVolme = myPriceArray[1];
+   float LastVolume = myPriceArray[1];
 
-   return CurrentVolume > MinVolume;
+   return CurrentVolume > MaxVolume;
   }
 
-
-//+------------------------------------------------------------------+
-//|                                                                  |
-//+------------------------------------------------------------------+
-int ComputeADR()
-  {
-   MqlRates adrBars[];  //create an array for the price data
-
-   CopyRates(Symbol(),PERIOD_D1,1,ADRLookBack+1,adrBars); //fill the array with price data// Get bars
-
-   double sum=0.0;
-   for(int i=0; i<ADRLookBack; i++)
-     {
-      sum = sum + MathAbs(adrBars[i].close-adrBars[i].open);
-     }
-
-   return (sum/ADRLookBack/_Point);
-  }
 //+------------------------------------------------------------------+
 double ComputeLot()
   {
