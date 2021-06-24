@@ -111,3 +111,21 @@ int ComputeADR(int lookBack, ENUM_TIMEFRAMES period = PERIOD_D1)
   }
 //+------------------------------------------------------------------+
 //+------------------------------------------------------------------+
+
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+bool outsideTradingHours(int START_HR,int STOP_HR)
+  {
+   MqlDateTime Time;
+   TimeCurrent(Time);
+
+   if(START_HR>STOP_HR)
+      return (Time.hour < START_HR && Time.hour > STOP_HR);
+
+   if(START_HR<STOP_HR)
+      return (Time.hour > START_HR && Time.hour < STOP_HR);
+
+   return false;
+  }
+//+------------------------------------------------------------------+

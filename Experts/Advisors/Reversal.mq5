@@ -17,6 +17,8 @@ input int      MaxBars=96;
 input double   MaxVolume=2000;
 input double TPMultiplier=0.5;
 input double SLMultiplier=1.0;
+input int START_HOUR = 2;
+input int STOP_HOUR = 22;
 
 bool insideBounds=false;
 
@@ -69,24 +71,20 @@ void OnTick()
    double support = FindSupport(PriceInformation, MinBars, MaxBars-MinBars);
    PlotHorizontal("Support", support, clrBlue);
 
+// Dont trade if outside trading hours
+   if(outsideTradingHours(START_HOUR,STOP_HOUR))
+      return;
 
-
-
+// Dont Trade if trade already active
    if(PositionSelect(_Symbol)==true)   // if we already have an opened position, return
       return;
 
-   MqlTick latest_price;     // To be used for getting recent/latest price quotes
-   if(!SymbolInfoTick(_Symbol,latest_price))
-     {
-      Alert("Error getting the latest price quote - error:",GetLastError(),"!!");
-      return;
-     }
-
 // If price is within bounds reset flag
+   MqlTick latest_price;     // To be used for getting recent/latest price quotes
    if(latest_price.bid>=support && latest_price.ask<=resistance)
       insideBounds = true;
 
-// If no trade but the price is outside bounds, return
+// If current price is not within bounds, return
    if(!insideBounds)
       return;
 
@@ -94,9 +92,7 @@ void OnTick()
    if(VolumeMoreThan(MaxVolume))
       return;
 
-//--- Get the last price quote using the MQL5 MqlTick Structure
-
-// Place Buy if price hits support
+// Place Buy if price breaks support
    if(latest_price.ask<support)
      {
       double TPdiff = resistance-latest_price.ask;
@@ -108,7 +104,7 @@ void OnTick()
       insideBounds = false;
      }
 
-// Place Sell if price hits resistance
+// Place Sell if price breaks resistance
    if(latest_price.bid>resistance)
      {
       double TPdiff = latest_price.bid-support;
