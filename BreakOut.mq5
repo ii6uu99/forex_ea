@@ -8,6 +8,7 @@
 #property version   "1.00"
 
 //--- input parameters
+input double RiskFactor=0.2;
 input int      MinBars=24;
 input int      MaxBars=240;
 input double   MinVolume=2000;
@@ -94,14 +95,14 @@ void OnTick()
 // If price is within bounds reset flag
    if(latest_price.bid>=PriceInformation[LowestCandle].low && latest_price.ask<=PriceInformation[HighestCandle].high)
       outsideBounds = false;
-     
+
 // If no trade but the price is outside bounds, return
    if(outsideBounds)
       return;
-     
-     // If enough volume, send order
+
+// If enough volume, send order
    if(!EnoughVolume())
-     return;
+      return;
 
 //--- Get the last price quote using the MQL5 MqlTick Structure
 
@@ -144,7 +145,7 @@ void PlaceTrade(double price,int STP,int TKP,int orderType)
    mrequest.sl = NormalizeDouble(price + STP*_Point,_Digits); // Stop Loss
    mrequest.tp = NormalizeDouble(price - TKP*_Point,_Digits); // Take Profit
    mrequest.symbol = _Symbol;                                         // currency pair
-   mrequest.volume = 0.02;                                            // number of lots to trade
+   mrequest.volume = ComputeLot();                                  // number of lots to trade
    mrequest.magic = 34567;                                        // Order Magic Number
    mrequest.type= orderType;                                     // Sell Order
    mrequest.type_filling = ORDER_FILLING_FOK;                          // Order execution type
@@ -189,5 +190,14 @@ int ComputeADR()
      }
 
    return (sum/ADRLookBack/_Point);
+  }
+//+------------------------------------------------------------------+
+double ComputeLot()
+  {
+   double contractSize = SymbolInfoDouble(_Symbol,SYMBOL_TRADE_CONTRACT_SIZE);
+   double minLotSize = SymbolInfoDouble(_Symbol,SYMBOL_VOLUME_MIN);
+   double balance = AccountInfoDouble(ACCOUNT_BALANCE);
+
+   return MathMax(minLotSize,MathRound(RiskFactor*balance/contractSize*100)/100);
   }
 //+------------------------------------------------------------------+
