@@ -12,13 +12,12 @@
 
 //--- input parameters
 input double RiskFactor=0.2;
-input int      MinBars=24;
+input int      MinBars=12;
 input int      MaxBars=96;
 input double   MinVolume=0;
-input double   MaxVolume=10000;
-input int SLpoints = 500;
-input int START_HOUR = 0;
-input int STOP_HOUR = 24;
+input double   MaxVolume=100;
+input int START_HOUR = 20;
+input int STOP_HOUR = 3;
 
 bool insideBounds=false;
 
@@ -27,6 +26,7 @@ bool insideBounds=false;
 //+------------------------------------------------------------------+
 int OnInit()
   {
+
 // Do we have enough bars to work with
    if(Bars(_Symbol,_Period)<MaxBars) // if total bars is less than 60 bars
       return(INIT_FAILED);
@@ -62,6 +62,10 @@ void OnTick()
    double support = FindSupport(PriceInformation, MinBars, MaxBars-MinBars);
    PlotHorizontal("Support", support, clrBlue);
 
+// Get current price
+   MqlTick latest_price;     // To be used for getting recent/latest price quotes
+   SymbolInfoTick(_Symbol,latest_price); // Get latest price
+
 // Check if we're ready for a new trade
    if(PositionSelect(_Symbol)==false)
      {
@@ -70,8 +74,6 @@ void OnTick()
          return;
 
       // If price is within bounds reset flag
-      MqlTick latest_price;     // To be used for getting recent/latest price quotes
-      SymbolInfoTick(_Symbol,latest_price); // Get latest price
       if(latest_price.bid>=support && latest_price.ask<=resistance)
          insideBounds = true;
 
@@ -87,7 +89,7 @@ void OnTick()
       if(latest_price.ask<support)
         {
          double TP = resistance;
-         double SL = support-SLpoints*_Point;
+         double SL = 2*latest_price.ask - resistance;
 
          PlaceTrade(latest_price.ask,SL,TP,ORDER_TYPE_BUY, RiskFactor);
 
@@ -98,7 +100,7 @@ void OnTick()
       if(latest_price.bid>resistance)
         {
          double TP = support;
-         double SL = resistance+SLpoints*_Point;
+         double SL = 2*latest_price.bid - support;
 
          PlaceTrade(latest_price.bid,SL,TP,ORDER_TYPE_SELL, RiskFactor);
 
@@ -111,24 +113,20 @@ void OnTick()
       double oldSL = PositionGetDouble(POSITION_SL); // Get SL from current trade
       if(PositionGetInteger(POSITION_TYPE)==POSITION_TYPE_BUY)
         {
-         double newTP = NormalizeDouble(resistance,_Digits);
-         double newSL = NormalizeDouble(support-SLpoints*_Point,_Digits);
-         //Check if newSL and newTP are valid
-         if(oldTP==newTP && oldSL==newSL)
-            return;
-
-         ModifyTrade(PositionGetInteger(POSITION_TICKET),newSL,newTP);
+         double newTP = NormalizeDouble(MathMax(resistance,PositionGetDouble(POSITION_PRICE_OPEN)),_Digits);
+         double newSL = NormalizeDouble(2*PositionGetDouble(POSITION_PRICE_OPEN) - newTP,_Digits);
+         //Check if newSL and newTP aren't both the same (gives error)
+         if(!(oldTP==newTP && oldSL==newSL))
+            ModifyTrade(PositionGetInteger(POSITION_TICKET),newTP,newSL);
         }
 
       if(PositionGetInteger(POSITION_TYPE)==POSITION_TYPE_SELL)
         {
-         double newTP = NormalizeDouble(support,_Digits);
-         double newSL = NormalizeDouble(resistance+SLpoints*_Point,_Digits);
-         //Check if newSL and newTP are valid
-         if(oldTP==newTP && oldSL==newSL)
-            return;
-            
-         ModifyTrade(PositionGetInteger(POSITION_TICKET),newSL,newTP);
+         double newTP = NormalizeDouble(MathMin(support,PositionGetDouble(POSITION_PRICE_OPEN)),_Digits);
+         double newSL = NormalizeDouble(2*PositionGetDouble(POSITION_PRICE_OPEN) - newTP,_Digits);
+         //Check if newSL and newTP aren't both the same (gives error)
+         if(!(oldTP==newTP && oldSL==newSL))
+            ModifyTrade(PositionGetInteger(POSITION_TICKET),newTP,newSL);
         }
      }
   }

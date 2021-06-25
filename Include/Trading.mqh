@@ -128,7 +128,7 @@ bool outsideTradingHours(int START_HR,int STOP_HR)
    return false;
   }
 //+------------------------------------------------------------------+
-void ModifyTrade(long ticket,double newSL,double newTP)
+void ModifyTrade(long ticket,double newTP, double newSL)
   {
    MqlTradeRequest mrequest;  // To be used for sending our trade requests
    MqlTradeResult mresult;    // To be used to get our trade results
@@ -136,8 +136,8 @@ void ModifyTrade(long ticket,double newSL,double newTP)
 
    mrequest.action  =TRADE_ACTION_SLTP; // type of trade operation
    mrequest.position=ticket;   // ticket of the position
-   mrequest.sl      =NormalizeDouble(newSL,_Digits);                // Stop Loss of the position
    mrequest.tp      =NormalizeDouble(newTP,_Digits);                // Take Profit of the position
+   mrequest.sl      =NormalizeDouble(newSL,_Digits);                // Take Profit of the position
 
    OrderSend(mrequest,mresult);
   }
