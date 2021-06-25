@@ -30,11 +30,11 @@ int OnInit()
   {
   // Do we have enough bars to work with
    if(Bars(_Symbol,_Period)<MaxBars) // if total bars is less than 60 bars
-      return;
+      return(INIT_FAILED);
      
 // Check MaxBars > MinBars
    if(!(MaxBars>MinBars))
-      return;
+      return(INIT_FAILED);
   
    return(INIT_SUCCEEDED);
   }
