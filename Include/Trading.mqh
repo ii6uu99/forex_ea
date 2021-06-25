@@ -58,7 +58,6 @@ void PlaceTrade(double price,double stopLoss,double takeProfit,int orderType, do
 
 // send order
    OrderSend(mrequest,mresult);
-
   }
 
 
@@ -127,5 +126,19 @@ bool outsideTradingHours(int START_HR,int STOP_HR)
       return (Time.hour > START_HR && Time.hour < STOP_HR);
 
    return false;
+  }
+//+------------------------------------------------------------------+
+void ModifyTrade(long ticket,double newSL,double newTP)
+  {
+   MqlTradeRequest mrequest;  // To be used for sending our trade requests
+   MqlTradeResult mresult;    // To be used to get our trade results
+   ZeroMemory(mrequest);
+
+   mrequest.action  =TRADE_ACTION_SLTP; // type of trade operation
+   mrequest.position=ticket;   // ticket of the position
+   mrequest.sl      =NormalizeDouble(newSL,_Digits);                // Stop Loss of the position
+   mrequest.tp      =NormalizeDouble(newTP,_Digits);                // Take Profit of the position
+
+   OrderSend(mrequest,mresult);
   }
 //+------------------------------------------------------------------+

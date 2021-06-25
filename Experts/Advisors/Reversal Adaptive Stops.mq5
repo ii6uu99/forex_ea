@@ -16,8 +16,7 @@ input int      MinBars=24;
 input int      MaxBars=96;
 input double   MinVolume=0;
 input double   MaxVolume=10000;
-input double TPMultiplier=0.5;
-input double SLMultiplier=1.0;
+input int SLpoints = 100;
 input int START_HOUR = 0;
 input int STOP_HOUR = 24;
 
@@ -28,14 +27,14 @@ bool insideBounds=false;
 //+------------------------------------------------------------------+
 int OnInit()
   {
-  // Do we have enough bars to work with
+// Do we have enough bars to work with
    if(Bars(_Symbol,_Period)<MaxBars) // if total bars is less than 60 bars
       return(INIT_FAILED);
-     
+
 // Check MaxBars > MinBars
    if(MinBars>=MaxBars)
       return(INIT_FAILED);
-  
+
    return(INIT_SUCCEEDED);
   }
 //+------------------------------------------------------------------+
@@ -63,50 +62,69 @@ void OnTick()
    double support = FindSupport(PriceInformation, MinBars, MaxBars-MinBars);
    PlotHorizontal("Support", support, clrBlue);
 
-// Dont trade if outside trading hours
-   if(outsideTradingHours(START_HOUR,STOP_HOUR))
-      return;
-
-// Dont Trade if trade already active
-   if(PositionSelect(_Symbol)==true)   // if we already have an opened position, return
-      return;
-
-// If price is within bounds reset flag
-   MqlTick latest_price;     // To be used for getting recent/latest price quotes
-   SymbolInfoTick(_Symbol,latest_price); // Get latest price
-   if(latest_price.bid>=support && latest_price.ask<=resistance)
-      insideBounds = true;
-
-// If current price is not within bounds, return
-   if(!insideBounds)
-      return;
-
-// If too much volume, abort
-   if(Volume() < MinVolume || Volume() > MaxVolume)
-      return;
-
-// Place Buy if price breaks support
-   if(latest_price.ask<support)
+// Check if we're ready for a new trade
+   if(PositionSelect(_Symbol)==false)
      {
-      double TPdiff = resistance-latest_price.ask;
-      double TP = latest_price.ask + TPMultiplier*TPdiff;
-      double SL = latest_price.ask - SLMultiplier*TPdiff;
+      // Dont trade if outside trading hours
+      if(outsideTradingHours(START_HOUR,STOP_HOUR))
+         return;
 
-      PlaceTrade(latest_price.ask,SL,TP,ORDER_TYPE_BUY, RiskFactor);
+      // If price is within bounds reset flag
+      MqlTick latest_price;     // To be used for getting recent/latest price quotes
+      SymbolInfoTick(_Symbol,latest_price); // Get latest price
+      if(latest_price.bid>=support && latest_price.ask<=resistance)
+         insideBounds = true;
 
-      insideBounds = false;
+      // If current price is not within bounds, return
+      if(!insideBounds)
+         return;
+
+      // If too much volume, abort
+      if(Volume() < MinVolume || Volume() > MaxVolume)
+         return;
+
+      // Place Buy if price breaks support
+      if(latest_price.ask<support)
+        {
+         double TP = resistance;
+         double SL = support-SLpoints*_Point;
+
+         PlaceTrade(latest_price.ask,SL,TP,ORDER_TYPE_BUY, RiskFactor);
+
+         insideBounds = false;
+        }
+
+      // Place Sell if price breaks resistance
+      if(latest_price.bid>resistance)
+        {
+         double TP = support;
+         double SL = resistance+SLpoints*_Point;
+
+         PlaceTrade(latest_price.bid,SL,TP,ORDER_TYPE_SELL, RiskFactor);
+
+         insideBounds = false;
+        }
      }
-
-// Place Sell if price breaks resistance
-   if(latest_price.bid>resistance)
+   else// If we already have a trade open, see if we need to adapt TP and SL
      {
-      double TPdiff = latest_price.bid-support;
-      double TP = latest_price.bid - TPMultiplier*TPdiff;
-      double SL = latest_price.bid + SLMultiplier*TPdiff;
+     double oldTP = PositionGetDouble(POSITION_TP); // Get TP from current trade
+     double oldSL = PositionGetDouble(POSITION_SL); // Get SL from current trade
+      if(PositionGetInteger(POSITION_TYPE)==POSITION_TYPE_BUY)
+        {
+         double newTP = NormalizeDouble(resistance,_Digits);
+         double newSL = NormalizeDouble(support-SLpoints*_Point,_Digits);
+         //Check if newSL and newTP are valid
+         if
 
-      PlaceTrade(latest_price.bid,SL,TP,ORDER_TYPE_SELL, RiskFactor);
+         ModifyTrade(PositionGetInteger(POSITION_TICKET),newSL,newTP);
+        }
 
-      insideBounds = false;
+      if(PositionGetInteger(POSITION_TYPE)==POSITION_TYPE_SELL)
+        {
+         double newTP = support;
+         double newSL = resistance+SLpoints*_Point;
+         ModifyTrade(PositionGetInteger(POSITION_TICKET),newSL,newTP);
+        }
      }
   }
 
