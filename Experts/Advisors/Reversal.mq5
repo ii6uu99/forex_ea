@@ -17,8 +17,8 @@ input int      MaxBars=96;
 input double   MaxVolume=2000;
 input double TPMultiplier=0.5;
 input double SLMultiplier=1.0;
-input int START_HOUR = 2;
-input int STOP_HOUR = 22;
+input int START_HOUR = 0;
+input int STOP_HOUR = 24;
 
 bool insideBounds=false;
 
@@ -81,6 +81,7 @@ void OnTick()
 
 // If price is within bounds reset flag
    MqlTick latest_price;     // To be used for getting recent/latest price quotes
+   SymbolInfoTick(_Symbol,latest_price); // Get latest price
    if(latest_price.bid>=support && latest_price.ask<=resistance)
       insideBounds = true;
 
@@ -91,6 +92,8 @@ void OnTick()
 // If too much volume, abort
    if(VolumeMoreThan(MaxVolume))
       return;
+      
+   Print("Volumecheck");
 
 // Place Buy if price breaks support
    if(latest_price.ask<support)
