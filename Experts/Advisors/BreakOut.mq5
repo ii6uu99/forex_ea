@@ -1,5 +1,5 @@
 //+------------------------------------------------------------------+
-//|                                                     BreakOut.mq5 |
+//|                                                     Reversal.mq5 |
 //|                       Copyright 2021, Zjansson Technologies Ltd. |
 //|                              https://github.com/Entreco/forex_ea |
 //+------------------------------------------------------------------+
@@ -13,27 +13,29 @@
 //--- input parameters
 input double RiskFactor=0.2;
 input int      MinBars=24;
-input int      MaxBars=240;
-input double   MinVolume=2000;
-input int ADRLookBack=7;
-input int ADRMultiplierSL=1;
-input int ADRMultiplierTP=1;
+input int      MaxBars=96;
+input double   MinVolume=0;
+input double   MaxVolume=10000;
+input double TPMultiplier=0.5;
+input double SLMultiplier=1.0;
+input int START_HOUR = 0;
+input int STOP_HOUR = 24;
 
-bool outsideBounds=false;
+bool insideBounds=false;
 
 //+------------------------------------------------------------------+
 //| Expert initialization function                                   |
 //+------------------------------------------------------------------+
 int OnInit()
   {
+  // Do we have enough bars to work with
+   if(Bars(_Symbol,_Period)<MaxBars) // if total bars is less than 60 bars
+      return;
+     
 // Check MaxBars > MinBars
    if(!(MaxBars>MinBars))
-     {
-      Alert("Set MaxBars higher than MinBars");
-      return(INIT_FAILED);
-     }
-
-//---
+      return;
+  
    return(INIT_SUCCEEDED);
   }
 //+------------------------------------------------------------------+
@@ -49,16 +51,8 @@ void OnDeinit(const int reason)
 //+------------------------------------------------------------------+
 void OnTick()
   {
-
-// Do we have enough bars to work with
-   if(Bars(_Symbol,_Period)<MaxBars) // if total bars is less than 60 bars
-     {
-      Alert("We don't have enough bars, EA will now exit!!");
-      return;
-     }
-
    MqlRates PriceInformation[];  //create an array for the price data
-   ArraySetAsSeries(PriceInformation, true);  //sort the array current candle downwards
+   ArraySetAsSeries(PriceInformation,true);  //sort the array current candle downwards
    CopyRates(Symbol(),Period(),MinBars,MaxBars-MinBars,PriceInformation); //fill the array with price data
 
 // Create Resistance Line
@@ -68,57 +62,52 @@ void OnTick()
 // Create Support Line
    double support = FindSupport(PriceInformation, MinBars, MaxBars-MinBars);
    PlotHorizontal("Support", support, clrBlue);
-   
-   PlotTrend("Schuin", support, clrGreen, 25.0);
 
+// Dont trade if outside trading hours
+   if(outsideTradingHours(START_HOUR,STOP_HOUR))
+      return;
 
+// Dont Trade if trade already active
    if(PositionSelect(_Symbol)==true)   // if we already have an opened position, return
       return;
 
-   MqlTick latest_price;     // To be used for getting recent/latest price quotes
-   if(!SymbolInfoTick(_Symbol,latest_price))
-     {
-      Alert("Error getting the latest price quote - error:",GetLastError(),"!!");
-      return;
-     }
-
 // If price is within bounds reset flag
+   MqlTick latest_price;     // To be used for getting recent/latest price quotes
+   SymbolInfoTick(_Symbol,latest_price); // Get latest price
    if(latest_price.bid>=support && latest_price.ask<=resistance)
-      outsideBounds = false;
+      insideBounds = true;
 
-// If no trade but the price is outside bounds, return
-   if(outsideBounds)
+// If current price is not within bounds, return
+   if(!insideBounds)
       return;
 
-// If not enough volume, abort
-   if(!VolumeMoreThan(MinVolume))
+// If too much volume, abort
+   if(Volume() < MinVolume || Volume() > MaxVolume)
       return;
 
-//--- Get the last price quote using the MQL5 MqlTick Structure
-
-// Price is outsideBounds (either high or low) and we dont have an active trade --> go trade
-   int ADR = ComputeADR(ADRLookBack);
-
-// Place Sell if price breaks support
-   if(latest_price.bid<support)
+// Place Buy if price breaks support
+   if(latest_price.ask<support)
      {
-      int loss = ADRMultiplierSL*ADR;
-      int profit = ADRMultiplierTP*ADR;
-      PlaceTrade(latest_price.bid,loss,profit,ORDER_TYPE_SELL, RiskFactor);
+      double TPdiff = resistance-latest_price.ask;
+      double TP = latest_price.ask + TPMultiplier*TPdiff;
+      double SL = latest_price.ask - SLMultiplier*TPdiff;
 
-      outsideBounds = true;
+      PlaceTrade(latest_price.ask,SL,TP,ORDER_TYPE_BUY, RiskFactor);
+
+      insideBounds = false;
      }
 
-// Place Buy if price breaks resistance
-   if(latest_price.ask>resistance)
+// Place Sell if price breaks resistance
+   if(latest_price.bid>resistance)
      {
-      int loss = -1*ADRMultiplierSL*ADR;
-      int profit = -1*ADRMultiplierTP*ADR;
-      PlaceTrade(latest_price.ask,loss,profit,ORDER_TYPE_BUY, RiskFactor);
+      double TPdiff = latest_price.bid-support;
+      double TP = latest_price.bid - TPMultiplier*TPdiff;
+      double SL = latest_price.bid + SLMultiplier*TPdiff;
 
-      outsideBounds = true;
+      PlaceTrade(latest_price.bid,SL,TP,ORDER_TYPE_SELL, RiskFactor);
+
+      insideBounds = false;
      }
   }
-
 
 //+------------------------------------------------------------------+

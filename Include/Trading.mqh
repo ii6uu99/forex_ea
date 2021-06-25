@@ -79,7 +79,7 @@ double ComputeLot(double riskFactor)
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-bool VolumeMoreThan(int threshold)
+double Volume()
   {
    double volumeArray[];
    int VolumeDefinition = iVolumes(_Symbol, _Period, VOLUME_TICK);
@@ -89,7 +89,7 @@ bool VolumeMoreThan(int threshold)
    float CurrentVolume = volumeArray[0];
    float LastVolume = volumeArray[1];
 
-   return LastVolume > threshold;
+   return LastVolume;
   }
 //+------------------------------------------------------------------+
 

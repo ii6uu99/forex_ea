@@ -14,7 +14,8 @@
 input double RiskFactor=0.2;
 input int      MinBars=24;
 input int      MaxBars=96;
-input double   MaxVolume=2000;
+input double   MinVolume=0;
+input double   MaxVolume=10000;
 input double TPMultiplier=0.5;
 input double SLMultiplier=1.0;
 input int START_HOUR = 0;
@@ -27,14 +28,14 @@ bool insideBounds=false;
 //+------------------------------------------------------------------+
 int OnInit()
   {
+  // Do we have enough bars to work with
+   if(Bars(_Symbol,_Period)<MaxBars) // if total bars is less than 60 bars
+      return;
+     
 // Check MaxBars > MinBars
    if(!(MaxBars>MinBars))
-     {
-      Alert("Set MaxBars higher than MinBars");
-      return(INIT_FAILED);
-     }
-
-//---
+      return;
+  
    return(INIT_SUCCEEDED);
   }
 //+------------------------------------------------------------------+
@@ -50,15 +51,6 @@ void OnDeinit(const int reason)
 //+------------------------------------------------------------------+
 void OnTick()
   {
-
-// Do we have enough bars to work with
-   if(Bars(_Symbol,_Period)<MaxBars) // if total bars is less than 60 bars
-     {
-      Alert("We don't have enough bars, EA will now exit!!");
-      return;
-     }
-
-
    MqlRates PriceInformation[];  //create an array for the price data
    ArraySetAsSeries(PriceInformation,true);  //sort the array current candle downwards
    CopyRates(Symbol(),Period(),MinBars,MaxBars-MinBars,PriceInformation); //fill the array with price data
@@ -90,7 +82,7 @@ void OnTick()
       return;
 
 // If too much volume, abort
-   if(VolumeMoreThan(MaxVolume))
+   if(Volume() < MinVolume || Volume() > MaxVolume)
       return;
 
 // Place Buy if price breaks support
