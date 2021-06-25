@@ -21,21 +21,21 @@ input double SLMultiplier=1.0;
 input int START_HOUR = 0;
 input int STOP_HOUR = 24;
 
-bool insideBounds=false;
+bool outsideBounds =false;
 
 //+------------------------------------------------------------------+
 //| Expert initialization function                                   |
 //+------------------------------------------------------------------+
 int OnInit()
   {
-  // Do we have enough bars to work with
+// Do we have enough bars to work with
    if(Bars(_Symbol,_Period)<MaxBars) // if total bars is less than 60 bars
-      return;
-     
+      return(INIT_FAILED);
+
 // Check MaxBars > MinBars
-   if(!(MaxBars>MinBars))
-      return;
-  
+   if(MinBars>=MaxBars)
+      return(INIT_FAILED);
+
    return(INIT_SUCCEEDED);
   }
 //+------------------------------------------------------------------+
@@ -71,42 +71,44 @@ void OnTick()
    if(PositionSelect(_Symbol)==true)   // if we already have an opened position, return
       return;
 
-// If price is within bounds reset flag
+// Get price
    MqlTick latest_price;     // To be used for getting recent/latest price quotes
    SymbolInfoTick(_Symbol,latest_price); // Get latest price
-   if(latest_price.bid>=support && latest_price.ask<=resistance)
-      insideBounds = true;
 
-// If current price is not within bounds, return
-   if(!insideBounds)
+// Reset outsideBounds flag condition
+   if(latest_price.bid>=support && latest_price.ask<=resistance)
+      outsideBounds=false;
+
+// If outside bounds flag set, return
+   if(outsideBounds)
       return;
 
 // If too much volume, abort
    if(Volume() < MinVolume || Volume() > MaxVolume)
       return;
 
-// Place Buy if price breaks support
-   if(latest_price.ask<support)
+// Place Buy if price breaks resistance
+   if(latest_price.bid>resistance)
      {
-      double TPdiff = resistance-latest_price.ask;
+      double TPdiff = latest_price.ask-support;
       double TP = latest_price.ask + TPMultiplier*TPdiff;
       double SL = latest_price.ask - SLMultiplier*TPdiff;
 
       PlaceTrade(latest_price.ask,SL,TP,ORDER_TYPE_BUY, RiskFactor);
 
-      insideBounds = false;
+      outsideBounds = true;
      }
 
-// Place Sell if price breaks resistance
-   if(latest_price.bid>resistance)
+// Place Sell if price breaks support
+   if(latest_price.ask<support)
      {
-      double TPdiff = latest_price.bid-support;
+      double TPdiff = resistance-latest_price.bid;
       double TP = latest_price.bid - TPMultiplier*TPdiff;
       double SL = latest_price.bid + SLMultiplier*TPdiff;
 
       PlaceTrade(latest_price.bid,SL,TP,ORDER_TYPE_SELL, RiskFactor);
 
-      insideBounds = false;
+      outsideBounds = true;
      }
   }
 

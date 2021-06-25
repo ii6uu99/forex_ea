@@ -33,7 +33,7 @@ int OnInit()
       return(INIT_FAILED);
      
 // Check MaxBars > MinBars
-   if(!(MaxBars>MinBars))
+   if(MinBars>=MaxBars)
       return(INIT_FAILED);
   
    return(INIT_SUCCEEDED);
