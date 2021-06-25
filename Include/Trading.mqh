@@ -38,7 +38,7 @@ double FindSupport(const MqlRates &rates[], int start, int count)
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-void PlaceTrade(double price,int stopLoss,int takeProfit,int orderType, double riskFactor)
+void PlaceTrade(double price,double stopLoss,double takeProfit,int orderType, double riskFactor)
   {
 // Create traderequest
    MqlTradeRequest mrequest;  // To be used for sending our trade requests
@@ -47,8 +47,8 @@ void PlaceTrade(double price,int stopLoss,int takeProfit,int orderType, double r
 
    mrequest.action = TRADE_ACTION_DEAL;                                 // immediate order execution
    mrequest.price = NormalizeDouble(price,_Digits);          // latest Bid price
-   mrequest.sl = NormalizeDouble(price + stopLoss*_Point,_Digits); // Stop Loss
-   mrequest.tp = NormalizeDouble(price - takeProfit*_Point,_Digits); // Take Profit
+   mrequest.sl = NormalizeDouble(stopLoss,_Digits); // Stop Loss
+   mrequest.tp = NormalizeDouble(takeProfit,_Digits); // Take Profit
    mrequest.symbol = _Symbol;                                         // currency pair
    mrequest.volume = ComputeLot(riskFactor);                                  // number of lots to trade
    mrequest.magic = 34567;                                        // Order Magic Number

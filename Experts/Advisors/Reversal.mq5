@@ -92,8 +92,6 @@ void OnTick()
 // If too much volume, abort
    if(VolumeMoreThan(MaxVolume))
       return;
-      
-   Print("Volumecheck");
 
 // Place Buy if price breaks support
    if(latest_price.ask<support)
