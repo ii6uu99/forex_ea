@@ -16,7 +16,7 @@ input int      MinBars=24;
 input int      MaxBars=96;
 input double   MinVolume=0;
 input double   MaxVolume=10000;
-input int SLpoints = 100;
+input int SLpoints = 500;
 input int START_HOUR = 0;
 input int STOP_HOUR = 24;
 
@@ -107,22 +107,27 @@ void OnTick()
      }
    else// If we already have a trade open, see if we need to adapt TP and SL
      {
-     double oldTP = PositionGetDouble(POSITION_TP); // Get TP from current trade
-     double oldSL = PositionGetDouble(POSITION_SL); // Get SL from current trade
+      double oldTP = PositionGetDouble(POSITION_TP); // Get TP from current trade
+      double oldSL = PositionGetDouble(POSITION_SL); // Get SL from current trade
       if(PositionGetInteger(POSITION_TYPE)==POSITION_TYPE_BUY)
         {
          double newTP = NormalizeDouble(resistance,_Digits);
          double newSL = NormalizeDouble(support-SLpoints*_Point,_Digits);
          //Check if newSL and newTP are valid
-         if
+         if(oldTP==newTP && oldSL==newSL)
+            return;
 
          ModifyTrade(PositionGetInteger(POSITION_TICKET),newSL,newTP);
         }
 
       if(PositionGetInteger(POSITION_TYPE)==POSITION_TYPE_SELL)
         {
-         double newTP = support;
-         double newSL = resistance+SLpoints*_Point;
+         double newTP = NormalizeDouble(support,_Digits);
+         double newSL = NormalizeDouble(resistance+SLpoints*_Point,_Digits);
+         //Check if newSL and newTP are valid
+         if(oldTP==newTP && oldSL==newSL)
+            return;
+            
          ModifyTrade(PositionGetInteger(POSITION_TICKET),newSL,newTP);
         }
      }
