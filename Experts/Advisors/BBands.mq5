@@ -13,7 +13,7 @@
 
 //--- input parameters
 input double RiskFactor = 0.2;
-input int      BBandPeriod=20;
+input int BBandPeriod=20;
 input int SlowEMAPeriod = 120;
 input int FastEMAPeriod = 5;
 

@@ -93,17 +93,17 @@ double Volume()
 //+------------------------------------------------------------------+
 
 //+------------------------------------------------------------------+
-//| ComputeADR, default period = PERIOD_D1                           |
+//| Compute Average True Range in points, default period = PERIOD_D1                           |
 //+------------------------------------------------------------------+
-int ComputeADR(int lookBack, ENUM_TIMEFRAMES period = PERIOD_D1)
+int ComputeATR(int lookBack, ENUM_TIMEFRAMES period = PERIOD_D1)
   {
-   MqlRates adrBars[];  //create an array for the price data
-   CopyRates(Symbol(),period,1,lookBack+1,adrBars); //fill the array with price data// Get bars
+   MqlRates ATRBars[];  //create an array for the price data
+   CopyRates(Symbol(),period,1,lookBack+1,ATRBars); //fill the array with price data// Get bars
 
    double sum=0.0;
    for(int i=0; i<lookBack; i++)
      {
-      sum += MathAbs(adrBars[i].close-adrBars[i].open);
+      sum += MathAbs(ATRBars[i].close-ATRBars[i].open);
      }
 
    return (sum/lookBack/_Point);
