@@ -7,6 +7,8 @@
 #property link      "https://github.com/Entreco/forex_ea"
 #property version   "1.00"
 
+#include <Trade\Trade.mqh>
+
 //+------------------------------------------------------------------+
 //| Finds Resistance - Maximum Rate                                  |
 //+------------------------------------------------------------------+
@@ -140,5 +142,11 @@ void ModifyTrade(long ticket,double newTP, double newSL)
    mrequest.sl      =NormalizeDouble(newSL,_Digits);                // Take Profit of the position
 
    OrderSend(mrequest,mresult);
+  }
+//+------------------------------------------------------------------+
+void CloseTrade(long ticket)
+  {
+   CTrade m_trade;
+   m_trade.PositionClose(ticket);
   }
 //+------------------------------------------------------------------+
