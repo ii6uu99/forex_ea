@@ -60,7 +60,6 @@ void OnTick()
         {
          TrendLong = true;
          EMACross = true;
-         Print("EMACRoss & Trendlong=true");
         }
      }
    else
@@ -69,7 +68,6 @@ void OnTick()
         {
          TrendLong = false;
          EMACross = true;
-         Print("EMACRoss & Trendlong=false");
         }
      }
 
