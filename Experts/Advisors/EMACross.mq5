@@ -13,9 +13,8 @@
 
 //--- input parameters
 input double RiskFactor = 0.2;
-input int SlowEMAPeriod = 120;
-input int FastEMAPeriod = 10;
-input int ATRBarslookback=10;
+input int SlowEMAPeriod = 40;
+input int FastEMAPeriod = 5;
 
 bool TrendLong = false;
 
@@ -74,28 +73,24 @@ void OnTick()
 
 // Dont Trade if trade already active
    if(PositionSelect(_Symbol)==true)   // if we already have an opened position, return
-      return;
+      if(EMACross)
+         CloseTrade(PositionGetInteger(POSITION_TICKET));
+      else
+         return;
 
 // Get price
    MqlTick latest_price;     // To be used for getting recent/latest price quotes
    SymbolInfoTick(_Symbol,latest_price); // Get latest price
 
-// Compute ATR in absolute value
-   double ATR = ComputeATR(ATRBarslookback, PERIOD_CURRENT)*_Point;
-
 // Place SELL when EMA's cross and trend changes to short
    if(EMACross && !TrendLong)
      {
-      double tp = latest_price.bid - ATR;
-      double sl = 2*latest_price.bid - tp;
-      PlaceTrade(latest_price.bid,sl,tp,ORDER_TYPE_SELL,RiskFactor);
+      PlaceTrade(latest_price.bid,0,0,ORDER_TYPE_SELL,RiskFactor);
      }
 // Place BUY when EMA's cross and trend changes to long
    if(EMACross && TrendLong)
      {
-      double tp = ATR + latest_price.ask;
-      double sl = 2*latest_price.ask - tp;
-      PlaceTrade(latest_price.ask,sl,tp,ORDER_TYPE_BUY,RiskFactor);
+      PlaceTrade(latest_price.ask,0,0,ORDER_TYPE_BUY,RiskFactor);
      }
 
   }
