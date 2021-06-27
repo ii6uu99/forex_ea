@@ -52,10 +52,6 @@ void OnTick()
    slowEMA.Refresh(OBJ_ALL_PERIODS);
    fastEMA.Refresh(OBJ_ALL_PERIODS);
 
-// Dont Trade if trade already active
-   if(PositionSelect(_Symbol)==true)   // if we already have an opened position, return
-      return;
-
 // Determine Trend Direction and EMA Cross
    bool EMACross = false;
    if(!TrendLong)
@@ -81,6 +77,9 @@ void OnTick()
    if(EMACross)
       ObjectCreate(0,TimeToString(TimeCurrent()),OBJ_VLINE,0,TimeCurrent(),0);
 
+// Dont Trade if trade already active
+   if(PositionSelect(_Symbol)==true)   // if we already have an opened position, return
+      return;
 
 // Get price
    MqlTick latest_price;     // To be used for getting recent/latest price quotes
