@@ -26,7 +26,7 @@ CiMA fastEMA;
 //| Expert initialization function                                   |
 //+------------------------------------------------------------------+
 int OnInit()
-  {
+  { 
    slowEMA.Create(_Symbol,PERIOD_CURRENT,SlowEMAPeriod,0,MODE_EMA,PRICE_CLOSE);
    fastEMA.Create(_Symbol,PERIOD_CURRENT,FastEMAPeriod,0,MODE_EMA,PRICE_CLOSE);
 
@@ -61,19 +61,21 @@ void OnTick()
       TrendLong = false;
       EMACross = true;
       EMACrossTime = TimeCurrent();
+      ObjectCreate(0,TimeToString(TimeCurrent()),OBJ_VLINE,0,TimeCurrent(),0);
      }
    if(!TrendLong && (fastEMA.Main(0) > slowEMA.Main(0)))
      {
       TrendLong = true;
       EMACross = true;
       EMACrossTime = TimeCurrent();
+      ObjectCreate(0,TimeToString(TimeCurrent()),OBJ_VLINE,0,TimeCurrent(),0);
      }
 
 // Get number of bars since EMACross happened
    int  BarsSinceEMACross = Bars(_Symbol,PERIOD_CURRENT,TimeCurrent(),EMACrossTime);
 
 // Check if number of bars since cross is more than numberofretests allowed
-   if(BarsSinceEMACross > NumberOfRetests)
+   if(BarsSinceEMACross >= NumberOfRetests)
      {
       // Get the bars
       MqlRates rates[];
@@ -86,22 +88,24 @@ void OnTick()
          for(int i=0; i<BarsSinceEMACross; i++)
            {
             if(rates[i].low > slowEMA.Main(0) && rates[i].low < fastEMA.Main(0));
-              {retestCounter++;}
+              retestCounter++;
            }
          if(retestCounter>=NumberOfRetests)
             // Place buy
-            activeTrade.Buy(0.02);
+            Print("Buy");
+            //activeTrade.Buy(0.02);
         }
       else // if !Trendlong
         {
          for(int i=0; i<BarsSinceEMACross; i++)
            {
             if(rates[i].high > fastEMA.Main(0) && rates[i].low < slowEMA.Main(0));
-              {retestCounter++;}
+              retestCounter++;
            }
          if(retestCounter>=NumberOfRetests)
             // Place sell
-            activeTrade.Sell(0.02);
+            Print("Sell");
+            //activeTrade.Sell(0.02);
         }
 
      }
