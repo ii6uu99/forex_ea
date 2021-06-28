@@ -16,7 +16,8 @@ input int FastEMAPeriod = 20;
 
 // Global variables
 bool TrendLong = false;
-datetime EMACrossTime;
+bool EMACrossed = false;
+datetime BarCountStartTime;
 
 CTrade activeTrade;
 CiMA slowEMA;
@@ -26,7 +27,7 @@ CiMA fastEMA;
 //| Expert initialization function                                   |
 //+------------------------------------------------------------------+
 int OnInit()
-  { 
+  {
    slowEMA.Create(_Symbol,PERIOD_CURRENT,SlowEMAPeriod,0,MODE_EMA,PRICE_CLOSE);
    fastEMA.Create(_Symbol,PERIOD_CURRENT,FastEMAPeriod,0,MODE_EMA,PRICE_CLOSE);
 
@@ -55,59 +56,76 @@ void OnTick()
       return;
 
 // Check direction of trend and if an EMACross occured
-   bool EMACross = false;
    if(TrendLong && (fastEMA.Main(0) < slowEMA.Main(0)))
      {
       TrendLong = false;
-      EMACross = true;
-      EMACrossTime = TimeCurrent();
+      EMACrossed = true;
       ObjectCreate(0,TimeToString(TimeCurrent()),OBJ_VLINE,0,TimeCurrent(),0);
      }
    if(!TrendLong && (fastEMA.Main(0) > slowEMA.Main(0)))
      {
       TrendLong = true;
-      EMACross = true;
-      EMACrossTime = TimeCurrent();
+      EMACrossed = true;
       ObjectCreate(0,TimeToString(TimeCurrent()),OBJ_VLINE,0,TimeCurrent(),0);
      }
 
+// Get latest price
+   MqlTick latest_price;     // To be used for getting recent/latest price quotes
+   SymbolInfoTick(_Symbol,latest_price); // Get latest price
+   if(EMACrossed)
+     {
+      if(TrendLong && latest_price.last > slowEMA.Main(0) && latest_price.last > fastEMA.Main(0))
+        {
+         BarCountStartTime = TimeCurrent();
+         EMACrossed = false;
+        }
+      if(!TrendLong && latest_price.last < slowEMA.Main(0) && latest_price.last < fastEMA.Main(0))
+        {
+         BarCountStartTime = TimeCurrent();
+         EMACrossed = false;
+        }
+     }
+
+
 // Get number of bars since EMACross happened
-   int  BarsSinceEMACross = Bars(_Symbol,PERIOD_CURRENT,TimeCurrent(),EMACrossTime);
+   int  BarsSinceStartTime = Bars(_Symbol,PERIOD_CURRENT,TimeCurrent(),BarCountStartTime);
 
 // Check if number of bars since cross is more than numberofretests allowed
-   if(BarsSinceEMACross >= NumberOfRetests)
+   if(BarsSinceStartTime >= NumberOfRetests)
      {
       // Get the bars
       MqlRates rates[];
       ArraySetAsSeries(rates,true);
-      int copied=CopyRates(_Symbol,PERIOD_CURRENT,0,BarsSinceEMACross,rates);
+      int copied=CopyRates(_Symbol,PERIOD_CURRENT,0,BarsSinceStartTime,rates);
       // Check trend direction and check how many bars hit retest zone
       int retestCounter=0;
       if(TrendLong)
         {
-         for(int i=0; i<BarsSinceEMACross; i++)
+         for(int i=0; i<BarsSinceStartTime; i++)
            {
             if(rates[i].low > slowEMA.Main(0) && rates[i].low < fastEMA.Main(0));
-              retestCounter++;
+            retestCounter++;
            }
          if(retestCounter>=NumberOfRetests)
             // Place buy
             Print("Buy");
-            //activeTrade.Buy(0.02);
+         //activeTrade.Buy(0.02);
         }
       else // if !Trendlong
         {
-         for(int i=0; i<BarsSinceEMACross; i++)
+         for(int i=0; i<BarsSinceStartTime; i++)
            {
             if(rates[i].high > fastEMA.Main(0) && rates[i].low < slowEMA.Main(0));
-              retestCounter++;
+            retestCounter++;
            }
          if(retestCounter>=NumberOfRetests)
             // Place sell
             Print("Sell");
-            //activeTrade.Sell(0.02);
+         //activeTrade.Sell(0.02);
         }
 
      }
   }
+//+------------------------------------------------------------------+
+
 //+------------------------------------------------------------------+
