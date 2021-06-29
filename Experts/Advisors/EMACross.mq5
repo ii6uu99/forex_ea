@@ -7,6 +7,7 @@
 #property link      "https://www.mql5.com"
 #property version   "1.00"
 
+#include <Trade\Trade.mqh>
 #include <Indicators\Trend.mqh>
 #include "../../Include/Plotting.mqh";
 #include "../../Include/Trading.mqh";
@@ -18,6 +19,7 @@ input int FastEMAPeriod = 5;
 
 bool TrendLong = false;
 
+CTrade activeTrade;
 CiMA slowEMA;
 CiMA fastEMA;
 
@@ -28,6 +30,7 @@ int OnInit()
   {
    slowEMA.Create(_Symbol,PERIOD_CURRENT,SlowEMAPeriod,0,MODE_EMA,PRICE_CLOSE);
    fastEMA.Create(_Symbol,PERIOD_CURRENT,FastEMAPeriod,0,MODE_EMA,PRICE_CLOSE);
+   activeTrade = CreateTradeWithDefaults();
 
    return(INIT_SUCCEEDED);
   }
@@ -74,7 +77,7 @@ void OnTick()
 // Dont Trade if trade already active
    if(PositionSelect(_Symbol)==true)   // if we already have an opened position, return
       if(EMACross)
-         CloseTrade(PositionGetInteger(POSITION_TICKET));
+         CloseTrade(&activeTrade, PositionGetInteger(POSITION_TICKET));
       else
          return;
 
@@ -86,13 +89,13 @@ void OnTick()
    if(EMACross && !TrendLong)
      {
       //PlaceTrade(latest_price.bid,0,0,ORDER_TYPE_SELL,RiskFactor);
-      Sell(latest_price.bid, 0, 0, RiskFactor);
+      Sell(&activeTrade, latest_price.bid, 0, 0, RiskFactor);
      }
 // Place BUY when EMA's cross and trend changes to long
    if(EMACross && TrendLong)
      {
       //PlaceTrade(latest_price.ask,0,0,ORDER_TYPE_BUY,RiskFactor);
-      Buy(latest_price.ask, 0, 0, RiskFactor);
+      Buy(&activeTrade, latest_price.ask, 0, 0, RiskFactor);
      }
 
   }

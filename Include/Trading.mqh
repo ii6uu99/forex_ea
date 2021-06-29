@@ -62,7 +62,7 @@ void PlaceTrade(double price,double stopLoss,double takeProfit,int orderType, do
 // send order
    OrderSend(mrequest,mresult);
   }
-  
+
 //+------------------------------------------------------------------+
 //| Opens a long position with specified parameters                  |
 //+------------------------------------------------------------------+
@@ -244,9 +244,8 @@ void ModifyTrade(long ticket,double newTP, double newSL)
    OrderSend(mrequest,mresult);
   }
 //+------------------------------------------------------------------+
-void CloseTrade(long ticket)
+void CloseTrade(CTrade* trade, long ticket)
   {
-   CTrade m_trade;
-   m_trade.PositionClose(ticket);
+   trade.PositionClose(ticket);
   }
 //+------------------------------------------------------------------+
