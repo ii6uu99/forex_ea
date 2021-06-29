@@ -94,7 +94,8 @@ void OnTick()
       double TP = latest_price.ask + TPMultiplier*TPdiff;
       double SL = latest_price.ask - SLMultiplier*TPdiff;
 
-      PlaceTrade(latest_price.ask,SL,TP,ORDER_TYPE_BUY, RiskFactor);
+      //PlaceTrade(latest_price.ask,SL,TP,ORDER_TYPE_BUY, RiskFactor);
+      Buy(latest_price.bid, SL, TP, RiskFactor);
 
       outsideBounds = true;
      }
@@ -106,7 +107,8 @@ void OnTick()
       double TP = latest_price.bid - TPMultiplier*TPdiff;
       double SL = latest_price.bid + SLMultiplier*TPdiff;
 
-      PlaceTrade(latest_price.bid,SL,TP,ORDER_TYPE_SELL, RiskFactor);
+      //PlaceTrade(latest_price.bid,SL,TP,ORDER_TYPE_SELL, RiskFactor);
+      Sell(latest_price.bid, SL, TP, RiskFactor);
 
       outsideBounds = true;
      }

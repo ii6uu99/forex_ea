@@ -21,6 +21,14 @@ void PlotHorizontal(const string name, double price, long line) export
   }
 
 //+------------------------------------------------------------------+
+//| Plot VLINE on current Time                                       |
+//+------------------------------------------------------------------+
+void PlotVertical()
+  {
+   ObjectCreate(0,TimeToString(TimeCurrent()),OBJ_VLINE,0,TimeCurrent(),0);
+  }
+
+//+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
 void PlotTrend(const string name, double price, long line = clrAqua, double angle = 45.0)

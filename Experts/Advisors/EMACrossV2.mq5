@@ -9,7 +9,11 @@
 
 #include <Trade\Trade.mqh>
 #include <Indicators\Trend.mqh>
+#include "../../Include/Plotting.mqh";
+#include "../../Include/Trading.mqh";
 
+//--- input parameters
+input double RiskFactor = 0.2;
 input int NumberOfRetests = 3;
 input int SlowEMAPeriod = 50;
 input int FastEMAPeriod = 20;
@@ -60,13 +64,13 @@ void OnTick()
      {
       TrendLong = false;
       EMACrossed = true;
-      ObjectCreate(0,TimeToString(TimeCurrent()),OBJ_VLINE,0,TimeCurrent(),0);
+      PlotVertical();
      }
    if(!TrendLong && (fastEMA.Main(0) > slowEMA.Main(0)))
      {
       TrendLong = true;
       EMACrossed = true;
-      ObjectCreate(0,TimeToString(TimeCurrent()),OBJ_VLINE,0,TimeCurrent(),0);
+      PlotVertical();
      }
 
 // Get latest price
@@ -103,25 +107,42 @@ void OnTick()
         {
          for(int i=0; i<BarsSinceStartTime; i++)
            {
-            if(rates[i].low > slowEMA.Main(0) && rates[i].low < fastEMA.Main(0));
-            retestCounter++;
+            if(rates[i].low > slowEMA.Main(0) && rates[i].low < fastEMA.Main(0))
+              {
+               retestCounter++;
+              }
+
+            if(retestCounter>=NumberOfRetests)
+              {
+               // Place buy
+               Print("Buy");
+               //activeTrade.Buy(0.02);
+               Buy(latest_price.ask, 0, 0, RiskFactor);
+               break; // exit the for loop -> we're done!
+              }
+
            }
-         if(retestCounter>=NumberOfRetests)
-            // Place buy
-            Print("Buy");
-         //activeTrade.Buy(0.02);
         }
+
       else // if !Trendlong
         {
          for(int i=0; i<BarsSinceStartTime; i++)
            {
-            if(rates[i].high > fastEMA.Main(0) && rates[i].low < slowEMA.Main(0));
-            retestCounter++;
+            if(rates[i].high > fastEMA.Main(0) && rates[i].low < slowEMA.Main(0))
+              {
+               retestCounter++;
+              }
+
+            if(retestCounter>=NumberOfRetests)
+              {
+               // Place sell
+               Print("Sell");
+               //activeTrade.Sell(0.02);
+               Sell(latest_price.bid, 0, 0, RiskFactor);
+               break; // exit the for loop -> we're done!
+              }
+
            }
-         if(retestCounter>=NumberOfRetests)
-            // Place sell
-            Print("Sell");
-         //activeTrade.Sell(0.02);
         }
 
      }

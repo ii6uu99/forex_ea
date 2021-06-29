@@ -9,6 +9,7 @@
 
 #include <Trade\Trade.mqh>
 
+
 //+------------------------------------------------------------------+
 //| Finds Resistance - Maximum Rate                                  |
 //+------------------------------------------------------------------+
@@ -62,6 +63,111 @@ void PlaceTrade(double price,double stopLoss,double takeProfit,int orderType, do
    OrderSend(mrequest,mresult);
   }
 
+//+------------------------------------------------------------------+
+//| Opens a long position with specified parameters                  |
+//+------------------------------------------------------------------+
+void Buy(double price,double stopLoss,double takeProfit, double riskFactor)
+  {
+   double volume = ComputeLot(riskFactor);
+   double normalPrice = NormalizeDouble(price, _Digits);
+   double normalStopLoss = NormalizeDouble(stopLoss,_Digits);
+   double normalTakeProfit = NormalizeDouble(takeProfit,_Digits);
+
+   CTrade trade = CreateTradeWithDefaults();
+   bool result = trade.Buy(volume, _Symbol, normalPrice, normalStopLoss, normalTakeProfit, "Buy");
+   if(!result)
+      Print("Buy() method failed. Return code=", trade.ResultRetcode(), " (", trade.ResultRetcodeDescription(), ")");
+  }
+//+------------------------------------------------------------------+
+//| Places a pending order of the Buy Limit type with specified parameters |
+//+------------------------------------------------------------------+
+void BuyLimit(double price,double stopLoss,double takeProfit, double riskFactor, ENUM_ORDER_TYPE_TIME typeMime = ORDER_TIME_DAY, datetime expirationTime = 0)
+  {
+   double volume = ComputeLot(riskFactor);
+   double normalPrice = NormalizeDouble(price, _Digits);
+   double normalStopLoss = NormalizeDouble(stopLoss,_Digits);
+   double normalTakeProfit = NormalizeDouble(takeProfit,_Digits);
+
+   CTrade trade = CreateTradeWithDefaults();
+   trade.BuyLimit(volume, normalPrice, _Symbol, normalStopLoss,normalTakeProfit,typeMime, expirationTime, "BuyLimit");
+  }
+
+//+------------------------------------------------------------------+
+//| Places a pending order of the Buy Stop type with specified parameters |
+//+------------------------------------------------------------------+
+void BuyStop(double price,double stopLoss,double takeProfit, double riskFactor, ENUM_ORDER_TYPE_TIME typeMime = ORDER_TIME_DAY, datetime expirationTime = 0)
+  {
+   double volume = ComputeLot(riskFactor);
+   double normalPrice = NormalizeDouble(price, _Digits);
+   double normalStopLoss = NormalizeDouble(stopLoss,_Digits);
+   double normalTakeProfit = NormalizeDouble(takeProfit,_Digits);
+
+   CTrade trade = CreateTradeWithDefaults();
+   trade.BuyStop(volume, normalPrice, _Symbol, normalStopLoss,normalTakeProfit,typeMime, expirationTime, "BuyStop");
+  }
+
+
+//+------------------------------------------------------------------+
+//| Opens a short position with specified parameters                  |
+//+------------------------------------------------------------------+
+void Sell(double price,double stopLoss,double takeProfit, double riskFactor)
+  {
+   double volume = ComputeLot(riskFactor);
+   double normalPrice = NormalizeDouble(price, _Digits);
+   double normalStopLoss = NormalizeDouble(stopLoss,_Digits);
+   double normalTakeProfit = NormalizeDouble(takeProfit,_Digits);
+
+   CTrade trade = CreateTradeWithDefaults();
+   bool result = trade.Sell(volume, _Symbol, normalPrice, normalStopLoss, normalTakeProfit, "Sell");
+   if(!result)
+      Print("Sell() method failed. Return code=", trade.ResultRetcode(), " (", trade.ResultRetcodeDescription(), ")");
+  }
+//+------------------------------------------------------------------+
+//| Places a pending order of the Sell Limit type with specified parameters |
+//+------------------------------------------------------------------+
+void SellLimit(double price,double stopLoss,double takeProfit, double riskFactor, ENUM_ORDER_TYPE_TIME typeMime = ORDER_TIME_DAY, datetime expirationTime = 0)
+  {
+   double volume = ComputeLot(riskFactor);
+   double normalPrice = NormalizeDouble(price, _Digits);
+   double normalStopLoss = NormalizeDouble(stopLoss,_Digits);
+   double normalTakeProfit = NormalizeDouble(takeProfit,_Digits);
+
+   CTrade trade = CreateTradeWithDefaults();
+   trade.SellLimit(volume, _Symbol, normalPrice, normalStopLoss, normalTakeProfit, typeMime, expirationTime, "SellLimit");
+  }
+//+------------------------------------------------------------------+
+//| Places a pending order of the Sell Stop type with specified parameters |
+//+------------------------------------------------------------------+
+void SellStop(double price,double stopLoss,double takeProfit, double riskFactor, ENUM_ORDER_TYPE_TIME typeMime = ORDER_TIME_DAY, datetime expirationTime = 0)
+  {
+   double volume = ComputeLot(riskFactor);
+   double normalPrice = NormalizeDouble(price, _Digits);
+   double normalStopLoss = NormalizeDouble(stopLoss,_Digits);
+   double normalTakeProfit = NormalizeDouble(takeProfit,_Digits);
+
+   CTrade trade = CreateTradeWithDefaults();
+   trade.SellStop(volume, _Symbol, normalPrice, normalStopLoss, normalTakeProfit, typeMime, expirationTime, "SellStop");
+  }
+
+
+
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+CTrade* CreateTradeWithDefaults(
+   ulong magic = 34567,
+   ENUM_ORDER_TYPE_FILLING filling = ORDER_FILLING_FOK,
+   ulong deviation = 100,
+   ENUM_LOG_LEVELS logLevel = LOG_LEVEL_ALL
+)
+  {
+   CTrade *trade = new CTrade();
+   trade.SetExpertMagicNumber(magic);
+   trade.SetTypeFilling(filling);
+   trade.SetDeviationInPoints(deviation);
+   trade.LogLevel(logLevel);
+   return trade;
+  }
 
 //+------------------------------------------------------------------+
 //|                                                                  |

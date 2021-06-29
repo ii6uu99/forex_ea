@@ -69,7 +69,7 @@ void OnTick()
 
 // Draw line where EMACross happened
    if(EMACross)
-      ObjectCreate(0,TimeToString(TimeCurrent()),OBJ_VLINE,0,TimeCurrent(),0);
+      PlotVertical();
 
 // Dont Trade if trade already active
    if(PositionSelect(_Symbol)==true)   // if we already have an opened position, return
@@ -85,12 +85,14 @@ void OnTick()
 // Place SELL when EMA's cross and trend changes to short
    if(EMACross && !TrendLong)
      {
-      PlaceTrade(latest_price.bid,0,0,ORDER_TYPE_SELL,RiskFactor);
+      //PlaceTrade(latest_price.bid,0,0,ORDER_TYPE_SELL,RiskFactor);
+      Sell(latest_price.bid, 0, 0, RiskFactor);
      }
 // Place BUY when EMA's cross and trend changes to long
    if(EMACross && TrendLong)
      {
-      PlaceTrade(latest_price.ask,0,0,ORDER_TYPE_BUY,RiskFactor);
+      //PlaceTrade(latest_price.ask,0,0,ORDER_TYPE_BUY,RiskFactor);
+      Buy(latest_price.ask, 0, 0, RiskFactor);
      }
 
   }
