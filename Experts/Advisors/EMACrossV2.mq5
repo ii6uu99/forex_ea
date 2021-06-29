@@ -34,6 +34,7 @@ int OnInit()
   {
    slowEMA.Create(_Symbol,PERIOD_CURRENT,SlowEMAPeriod,0,MODE_EMA,PRICE_CLOSE);
    fastEMA.Create(_Symbol,PERIOD_CURRENT,FastEMAPeriod,0,MODE_EMA,PRICE_CLOSE);
+   activeTrade = CreateTradeWithDefaults();
 
 //---
    return(INIT_SUCCEEDED);
@@ -116,8 +117,7 @@ void OnTick()
               {
                // Place buy
                Print("Buy");
-               //activeTrade.Buy(0.02);
-               Buy(latest_price.ask, 0, 0, RiskFactor);
+               Buy(&activeTrade, latest_price.ask, 0, 0, RiskFactor);
                break; // exit the for loop -> we're done!
               }
 
@@ -133,12 +133,11 @@ void OnTick()
                retestCounter++;
               }
 
-            if(retestCounter>=NumberOfRetests)
+            if(retestCounter>=1) //Downtrends are fast -> sell after 1 retest //NumberOfRetests)
               {
                // Place sell
                Print("Sell");
-               //activeTrade.Sell(0.02);
-               Sell(latest_price.bid, 0, 0, RiskFactor);
+               Sell(&activeTrade, latest_price.bid, 0, 0, RiskFactor);
                break; // exit the for loop -> we're done!
               }
 

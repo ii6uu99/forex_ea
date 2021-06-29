@@ -95,7 +95,7 @@ void OnTick()
       double SL = latest_price.ask - SLMultiplier*TPdiff;
 
       //PlaceTrade(latest_price.ask,SL,TP,ORDER_TYPE_BUY, RiskFactor);
-      Buy(latest_price.bid, SL, TP, RiskFactor);
+      Buy(latest_price.ask, SL, TP, RiskFactor);
 
       outsideBounds = true;
      }
