@@ -11,6 +11,8 @@ Testing
 - Right click and select "Refresh"
 - Select the Expert Advisor you want
 - Right click and select "Test"
+- Open Indicator/AutoTrend.mq5 and compile it (from https://github.com/peterthomet/MetaTrader-5-and-4-Tools/blob/master/Auto%20Trendlines/autotrendlines.mq5)
+- Add AutoTrend as an Indicator to see how this works
 
 Tasks
 ===============

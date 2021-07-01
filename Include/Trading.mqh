@@ -28,10 +28,10 @@ double FindResistance(const MqlRates &rates[], int start, int count)
 //+------------------------------------------------------------------+
 double FindSupport(const MqlRates &rates[], int start, int count)
   {
-   int LowestCandle;      //create variable for highest price
+   int LowestCandle;      //create variable for lowest price
    double Low[];           //create array for price data
    ArraySetAsSeries(Low,true);     //sort array from current candle downwards
-   CopyLow(Symbol(),Period(),start,count,Low);    //fill the array with the high prices
+   CopyLow(Symbol(),Period(),start,count,Low);    //fill the array with the low prices
    LowestCandle = ArrayMinimum(Low,0,count);  //get the lowest candle price
    return rates[LowestCandle].low;
   }

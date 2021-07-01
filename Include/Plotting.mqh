@@ -31,20 +31,23 @@ void PlotVertical()
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-void PlotTrend(const string name, double price, long line = clrAqua, double angle = 45.0)
+void PlotTrend(const string name, double price, long line = clrBlue, double angle = 45.0)
   {
-   ObjectCreate(0, name, OBJ_TRENDBYANGLE, 0, 0, 1, price);
-   ObjectSetInteger(0,name,OBJPROP_WIDTH,2);     //set object width
-   ObjectSetInteger(0,name,OBJPROP_COLOR, line); //set object colour
-   ObjectSetInteger(0,name,OBJPROP_RAY_RIGHT,true);
-//ObjectSetDouble(0,name,OBJPROP_ANGLE,angle);  //set angle
 
    double max_price=ChartGetDouble(0,CHART_PRICE_MAX);
    double min_price=ChartGetDouble(0,CHART_PRICE_MIN);
-   ObjectCreate(0,"Rect",OBJ_RECTANGLE, 0, 0, min_price, 1000, max_price);
-   ObjectSetInteger(0,"Rect",OBJPROP_STYLE,STYLE_SOLID);
-   ObjectSetInteger(0,"Rect",OBJPROP_WIDTH,2);
-   ObjectSetInteger(0,"Rect",OBJPROP_FILL,true);
+   double shiftSize=ChartGetDouble(0, CHART_SHIFT_SIZE);
+
+   double max=TimeCurrent();
+   double min= max - shiftSize;
+
+   ObjectCreate(0,name,OBJ_TREND,0,min,min_price,max,max_price);
+   ObjectSetInteger(0,name,OBJPROP_COLOR,line);
+   ObjectSetInteger(0,name,OBJPROP_STYLE,STYLE_SOLID);
+   ObjectSetInteger(0,name,OBJPROP_BACK,false);
+   ObjectSetInteger(0,name,OBJPROP_RAY_LEFT,false);
+   ObjectSetInteger(0,name,OBJPROP_RAY_RIGHT,false);
+
   }
 
 //+------------------------------------------------------------------+

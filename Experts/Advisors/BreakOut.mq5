@@ -22,6 +22,7 @@ input int START_HOUR = 0;
 input int STOP_HOUR = 24;
 
 bool outsideBounds =false;
+CTrade activeTrade;
 
 //+------------------------------------------------------------------+
 //| Expert initialization function                                   |
@@ -36,6 +37,9 @@ int OnInit()
    if(MinBars>=MaxBars)
       return(INIT_FAILED);
 
+// Init CTrade with Default Options
+   activeTrade = CreateTradeWithDefaults();
+   
    return(INIT_SUCCEEDED);
   }
 //+------------------------------------------------------------------+
@@ -95,7 +99,7 @@ void OnTick()
       double SL = latest_price.ask - SLMultiplier*TPdiff;
 
       //PlaceTrade(latest_price.ask,SL,TP,ORDER_TYPE_BUY, RiskFactor);
-      Buy(latest_price.ask, SL, TP, RiskFactor);
+      Buy(&activeTrade, latest_price.ask, SL, TP, RiskFactor);
 
       outsideBounds = true;
      }
@@ -108,7 +112,7 @@ void OnTick()
       double SL = latest_price.bid + SLMultiplier*TPdiff;
 
       //PlaceTrade(latest_price.bid,SL,TP,ORDER_TYPE_SELL, RiskFactor);
-      Sell(latest_price.bid, SL, TP, RiskFactor);
+      Sell(&activeTrade, latest_price.bid, SL, TP, RiskFactor);
 
       outsideBounds = true;
      }
