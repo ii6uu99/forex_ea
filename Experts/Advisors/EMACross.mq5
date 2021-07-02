@@ -59,6 +59,7 @@ void OnTick()
         {
          TrendLong = true;
          EMACross = true;
+         PlotVertical();
         }
      }
    else
@@ -67,12 +68,10 @@ void OnTick()
         {
          TrendLong = false;
          EMACross = true;
+         PlotVertical();
         }
      }
 
-// Draw line where EMACross happened
-   if(EMACross)
-      PlotVertical();
 
 // Dont Trade if trade already active
    if(PositionSelect(_Symbol)==true)   // if we already have an opened position, return

@@ -29,24 +29,66 @@ void PlotVertical()
   }
 
 //+------------------------------------------------------------------+
-//|                                                                  |
+//|    PlotResistanceTrend                                           |
 //+------------------------------------------------------------------+
-void PlotTrend(const string name, double price, long line = clrBlue, double angle = 45.0)
+void PlotResistanceTrend(const MqlRates &rates[], int lookBack = 10, long line = clrRed)
   {
 
-   double max_price=ChartGetDouble(0,CHART_PRICE_MAX);
-   double min_price=ChartGetDouble(0,CHART_PRICE_MIN);
-   double shiftSize=ChartGetDouble(0, CHART_SHIFT_SIZE);
-
-   double max=TimeCurrent();
-   double min= max - shiftSize;
-
-   ObjectCreate(0,name,OBJ_TREND,0,min,min_price,max,max_price);
+   double Highs[];
+   //ArraySetAsSeries(Highs, false);
+   CopyHigh(_Symbol, PERIOD_CURRENT, 0, lookBack, Highs);
+   
+   int highIndex;
+   
+   highIndex = ArrayMaximum(Highs);
+   MqlRates top1 = rates[highIndex];
+   Highs[highIndex] = 0;
+   
+   highIndex = ArrayMaximum(Highs);
+   MqlRates top2 = rates[highIndex];
+   Highs[highIndex] = 0;
+   
+   const string name = "Resistance Trend";
+   
+   ObjectCreate(0,name,OBJ_TREND,0, top1.time, top1.high, top2.time, top2.high);
    ObjectSetInteger(0,name,OBJPROP_COLOR,line);
+   ObjectSetInteger(0,name,OBJPROP_WIDTH,2);
    ObjectSetInteger(0,name,OBJPROP_STYLE,STYLE_SOLID);
    ObjectSetInteger(0,name,OBJPROP_BACK,false);
-   ObjectSetInteger(0,name,OBJPROP_RAY_LEFT,false);
-   ObjectSetInteger(0,name,OBJPROP_RAY_RIGHT,false);
+   ObjectSetInteger(0,name,OBJPROP_RAY_LEFT,true);
+   ObjectSetInteger(0,name,OBJPROP_RAY_RIGHT,true);
+   
+  }
+  
+//+------------------------------------------------------------------+
+//|    PlotSupportTrend                                              |
+//+------------------------------------------------------------------+
+void PlotSupportTrend(const MqlRates &rates[], int lookBack = 10, long line = clrBlue)
+  {
+
+   double Lows[];
+   //ArraySetAsSeries(Lows, false);
+   CopyLow(_Symbol, PERIOD_CURRENT, 0, lookBack, Lows);
+   
+   int lowIndex;
+   
+   lowIndex = ArrayMinimum(Lows);
+   MqlRates bottom1 = rates[lowIndex];
+   Lows[lowIndex] = INT_MAX;
+   
+   lowIndex = ArrayMinimum(Lows);
+   MqlRates bottom2 = rates[lowIndex];
+   Lows[lowIndex] = INT_MAX;
+   
+   const string name = "Support Trend";
+   
+   ObjectCreate(0,name,OBJ_TREND,0, bottom1.time, bottom1.low, bottom2.time, bottom2.low);
+   ObjectSetInteger(0,name,OBJPROP_COLOR,line);
+   ObjectSetInteger(0,name,OBJPROP_WIDTH,2);
+   ObjectSetInteger(0,name,OBJPROP_STYLE,STYLE_SOLID);
+   ObjectSetInteger(0,name,OBJPROP_BACK,false);
+   ObjectSetInteger(0,name,OBJPROP_RAY_LEFT,true);
+   ObjectSetInteger(0,name,OBJPROP_RAY_RIGHT,true);
 
   }
 

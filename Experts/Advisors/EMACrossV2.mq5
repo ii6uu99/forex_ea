@@ -128,7 +128,7 @@ void OnTick()
         {
          for(int i=0; i<BarsSinceStartTime; i++)
            {
-            if(rates[i].high > fastEMA.Main(0) && rates[i].low < slowEMA.Main(0))
+            if(rates[i].high > fastEMA.Main(0) && rates[i].high < slowEMA.Main(0))
               {
                retestCounter++;
               }

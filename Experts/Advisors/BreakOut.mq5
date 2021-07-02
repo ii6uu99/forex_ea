@@ -57,8 +57,8 @@ void OnTick()
   {
    MqlRates PriceInformation[];  //create an array for the price data
    ArraySetAsSeries(PriceInformation,true);  //sort the array current candle downwards
-   CopyRates(Symbol(),Period(),MinBars,MaxBars-MinBars,PriceInformation); //fill the array with price data
-
+   CopyRates(_Symbol,PERIOD_CURRENT,MinBars,MaxBars-MinBars,PriceInformation); //fill the array with price data
+   
 // Create Resistance Line
    double resistance = FindResistance(PriceInformation, MinBars, MaxBars-MinBars);
    PlotHorizontal("Resistance", resistance, clrRed);
@@ -78,6 +78,11 @@ void OnTick()
 // Get price
    MqlTick latest_price;     // To be used for getting recent/latest price quotes
    SymbolInfoTick(_Symbol,latest_price); // Get latest price
+   
+   
+// Plot Trends
+   PlotResistanceTrend(PriceInformation, MaxBars-MinBars);
+   PlotSupportTrend(PriceInformation, MaxBars-MinBars);
 
 // Reset outsideBounds flag condition
    if(latest_price.bid>=support && latest_price.ask<=resistance)
