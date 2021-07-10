@@ -7,8 +7,9 @@
 #property link      "https://github.com/Entreco/forex_ea"
 #property version   "1.00"
 
-#include "../../Include/Plotting.mqh";
-#include "../../Include/Trading.mqh";
+#include <Zjansson\Coordinate.mqh>
+#include "../../Include/Zjansson/Plotting.mqh";
+#include "../../Include/Zjansson/Trading.mqh";
 
 //--- input parameters
 input double RiskFactor=0.2;
@@ -28,14 +29,14 @@ bool insideBounds=false;
 //+------------------------------------------------------------------+
 int OnInit()
   {
-  // Do we have enough bars to work with
+// Do we have enough bars to work with
    if(Bars(_Symbol,_Period)<MaxBars) // if total bars is less than 60 bars
       return(INIT_FAILED);
-     
+
 // Check MaxBars > MinBars
    if(MinBars>=MaxBars)
       return(INIT_FAILED);
-  
+
    return(INIT_SUCCEEDED);
   }
 //+------------------------------------------------------------------+
@@ -56,12 +57,19 @@ void OnTick()
    CopyRates(Symbol(),Period(),MinBars,MaxBars-MinBars,PriceInformation); //fill the array with price data
 
 // Create Resistance Line
-   double resistance = FindResistance(PriceInformation, MinBars, MaxBars-MinBars);
-   PlotHorizontal("Resistance", resistance, clrRed);
+   Coordinate *resistance = FindResistance(PriceInformation, MinBars, MaxBars-MinBars);
+   PlotHorizontal("Resistance", resistance.price, clrRed);
 
 // Create Support Line
-   double support = FindSupport(PriceInformation, MinBars, MaxBars-MinBars);
-   PlotHorizontal("Support", support, clrBlue);
+   Coordinate *support = FindSupport(PriceInformation, MinBars, MaxBars-MinBars);
+   PlotHorizontal("Support", support.price, clrBlue);
+
+// Plot Trends
+   Trend *resistanceTrend = FindResistanceTrend(PriceInformation, MinBars, MaxBars);
+   PlotTrend("Resistance Trend", resistanceTrend, clrDarkRed);
+
+   Trend *supportTrend = FindSupportTrend(PriceInformation, MinBars, MaxBars);
+   PlotTrend("Support Trend", supportTrend, clrDarkBlue);
 
 // Dont trade if outside trading hours
    if(outsideTradingHours(START_HOUR,STOP_HOUR))
@@ -74,7 +82,7 @@ void OnTick()
 // If price is within bounds reset flag
    MqlTick latest_price;     // To be used for getting recent/latest price quotes
    SymbolInfoTick(_Symbol,latest_price); // Get latest price
-   if(latest_price.bid>=support && latest_price.ask<=resistance)
+   if(latest_price.bid>=support.price && latest_price.ask<=resistance.price)
       insideBounds = true;
 
 // If current price is not within bounds, return
@@ -86,9 +94,9 @@ void OnTick()
       return;
 
 // Place Buy if price breaks support
-   if(latest_price.ask<support)
+   if(latest_price.ask<support.price)
      {
-      double TPdiff = resistance-latest_price.ask;
+      double TPdiff = resistance.price-latest_price.ask;
       double TP = latest_price.ask + TPMultiplier*TPdiff;
       double SL = latest_price.ask - SLMultiplier*TPdiff;
 
@@ -98,9 +106,9 @@ void OnTick()
      }
 
 // Place Sell if price breaks resistance
-   if(latest_price.bid>resistance)
+   if(latest_price.bid>resistance.price)
      {
-      double TPdiff = latest_price.bid-support;
+      double TPdiff = latest_price.bid-support.price;
       double TP = latest_price.bid - TPMultiplier*TPdiff;
       double SL = latest_price.bid + SLMultiplier*TPdiff;
 

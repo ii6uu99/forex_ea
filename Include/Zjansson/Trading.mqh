@@ -8,34 +8,60 @@
 #property version   "1.00"
 
 #include <Trade\Trade.mqh>
-
+#include <Zjansson\Coordinate.mqh>
+#include <Zjansson\Trend.mqh>
 
 //+------------------------------------------------------------------+
 //| Finds Resistance - Maximum Rate                                  |
 //+------------------------------------------------------------------+
-double FindResistance(const MqlRates &rates[], int start, int count)
+Coordinate* FindResistance(const MqlRates &rates[], int start, int count)
   {
-   int HighestCandle;      //create variable for highest price
-   double High[];           //create array for price data
+   int HighestCandle;
+   double High[];
    ArraySetAsSeries(High,true);     //sort array from current candle downwards
-   CopyHigh(Symbol(),Period(),start,count,High);    //fill the array with the high prices
-   HighestCandle = ArrayMaximum(High,0,count);  //get the highest candle price
-   return rates[HighestCandle].high;
+   CopyHigh(_Symbol,PERIOD_CURRENT,start,count,High);    //fill the array with the high prices
+   HighestCandle = ArrayMaximum(High,0,count);
+   datetime co = iTime(_Symbol, PERIOD_CURRENT, HighestCandle);
+   return new Coordinate(rates[HighestCandle].time, rates[HighestCandle].high);
   }
 
 //+------------------------------------------------------------------+
-//| Finds Support - Minimum Rate                                               |
+//| Finds Support - Minimum Rate                                     |
 //+------------------------------------------------------------------+
-double FindSupport(const MqlRates &rates[], int start, int count)
+Coordinate* FindSupport(const MqlRates &rates[], int start, int count)
   {
-   int LowestCandle;      //create variable for lowest price
-   double Low[];           //create array for price data
+   int LowestCandle;
+   double Low[];
    ArraySetAsSeries(Low,true);     //sort array from current candle downwards
-   CopyLow(Symbol(),Period(),start,count,Low);    //fill the array with the low prices
-   LowestCandle = ArrayMinimum(Low,0,count);  //get the lowest candle price
-   return rates[LowestCandle].low;
+   CopyLow(_Symbol,PERIOD_CURRENT,start,count,Low);    //fill the array with the low prices
+   LowestCandle = ArrayMinimum(Low,0,count);
+   return new Coordinate(rates[LowestCandle].time, rates[LowestCandle].low);
   }
 //+------------------------------------------------------------------+
+
+//+------------------------------------------------------------------+
+//| Finds Resistance Trend                                           |
+//+------------------------------------------------------------------+
+Trend* FindResistanceTrend(const MqlRates &rates[], int start, int count, double weight = 0.3)
+  {
+   int split = (1.0 * count-start)*weight;
+   Coordinate *current = FindResistance(rates, start, split);
+   Coordinate *previous = FindResistance(rates, split, count);
+
+   return new Trend(previous, current);
+  }
+
+//+------------------------------------------------------------------+
+//| Finds Support Trend                                              |
+//+------------------------------------------------------------------+
+Trend* FindSupportTrend(const MqlRates &rates[], int start, int count, double weight = 0.3)
+  {
+   int split = (1.0 * count-start)*weight;
+   Coordinate *current = FindSupport(rates, start, split);
+   Coordinate *previous= FindSupport(rates, split, count);
+
+   return new Trend(previous, current);
+  }
 
 
 //+------------------------------------------------------------------+

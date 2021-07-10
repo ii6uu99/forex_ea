@@ -8,12 +8,15 @@
 #property version   "1.00"
 
 #include <Trade\Trade.mqh>
+#include <Zjansson\Coordinate.mqh>
 #include <Indicators\Trend.mqh>
-#include "../../Include/Plotting.mqh";
-#include "../../Include/Trading.mqh";
+#include "../../Include/Zjansson/Plotting.mqh";
+#include "../../Include/Zjansson/Trading.mqh";
 
 //--- input parameters
 input double RiskFactor = 0.2;
+input int      MinBars=24;
+input int      MaxBars=96;
 input int SlowEMAPeriod = 40;
 input int FastEMAPeriod = 5;
 
@@ -50,6 +53,18 @@ void OnTick()
 // Refresh indicators
    slowEMA.Refresh(OBJ_ALL_PERIODS);
    fastEMA.Refresh(OBJ_ALL_PERIODS);
+
+   MqlRates PriceInformation[];  //create an array for the price data
+   ArraySetAsSeries(PriceInformation,true);  //sort the array current candle downwards
+   CopyRates(Symbol(),Period(),MinBars,MaxBars-MinBars,PriceInformation); //fill the array with price data
+
+// Create Resistance Line
+   Coordinate *resistance = FindResistance(PriceInformation, MinBars, MaxBars-MinBars);
+   PlotHorizontal("Resistance", resistance.price, clrRed);
+
+// Create Support Line
+   Coordinate *support = FindSupport(PriceInformation, MinBars, MaxBars-MinBars);
+   PlotHorizontal("Support", support.price, clrBlue);
 
 // Determine Trend Direction and EMA Cross
    bool EMACross = false;

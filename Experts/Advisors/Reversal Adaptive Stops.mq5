@@ -7,8 +7,10 @@
 #property link      "https://github.com/Entreco/forex_ea"
 #property version   "1.00"
 
-#include "../../Include/Plotting.mqh";
-#include "../../Include/Trading.mqh";
+#include <Indicators\Trend.mqh>
+#include <Zjansson\Coordinate.mqh>
+#include "../../Include/Zjansson/Plotting.mqh";
+#include "../../Include/Zjansson/Trading.mqh";
 
 //--- input parameters
 input double RiskFactor=0.2;
@@ -55,12 +57,19 @@ void OnTick()
    CopyRates(Symbol(),Period(),MinBars,MaxBars-MinBars,PriceInformation); //fill the array with price data
 
 // Create Resistance Line
-   double resistance = FindResistance(PriceInformation, MinBars, MaxBars-MinBars);
-   PlotHorizontal("Resistance", resistance, clrRed);
+   Coordinate *resistance = FindResistance(PriceInformation, MinBars, MaxBars-MinBars);
+   PlotHorizontal("Resistance", resistance.price, clrRed);
 
 // Create Support Line
-   double support = FindSupport(PriceInformation, MinBars, MaxBars-MinBars);
-   PlotHorizontal("Support", support, clrBlue);
+   Coordinate *support = FindSupport(PriceInformation, MinBars, MaxBars-MinBars);
+   PlotHorizontal("Support", support.price, clrBlue);
+
+// Plot Trends
+   Trend *resistanceTrend = FindResistanceTrend(PriceInformation, MinBars, MinBars * 5);
+   PlotTrend("Resistance Trend", resistanceTrend, clrRed);
+
+   Trend *supportTrend = FindSupportTrend(PriceInformation, MinBars, MinBars * 5);
+   PlotTrend("Support Trend", supportTrend, clrBlue);
 
 // Get current price
    MqlTick latest_price;     // To be used for getting recent/latest price quotes
@@ -74,7 +83,7 @@ void OnTick()
          return;
 
       // If price is within bounds reset flag
-      if(latest_price.bid>=support && latest_price.ask<=resistance)
+      if(latest_price.bid>=support.price && latest_price.ask<=resistance.price)
          insideBounds = true;
 
       // If current price is not within bounds, return
@@ -86,10 +95,10 @@ void OnTick()
          return;
 
       // Place Buy if price breaks support
-      if(latest_price.ask<support)
+      if(latest_price.ask<support.price)
         {
-         double TP = resistance;
-         double SL = 2*latest_price.ask - resistance;
+         double TP = resistance.price;
+         double SL = 2*latest_price.ask - resistance.price;
 
          PlaceTrade(latest_price.ask,SL,TP,ORDER_TYPE_BUY, RiskFactor);
 
@@ -97,10 +106,10 @@ void OnTick()
         }
 
       // Place Sell if price breaks resistance
-      if(latest_price.bid>resistance)
+      if(latest_price.bid>resistance.price)
         {
-         double TP = support;
-         double SL = 2*latest_price.bid - support;
+         double TP = support.price;
+         double SL = 2*latest_price.bid - support.price;
 
          PlaceTrade(latest_price.bid,SL,TP,ORDER_TYPE_SELL, RiskFactor);
 
@@ -113,7 +122,7 @@ void OnTick()
       double oldSL = PositionGetDouble(POSITION_SL); // Get SL from current trade
       if(PositionGetInteger(POSITION_TYPE)==POSITION_TYPE_BUY)
         {
-         double newTP = NormalizeDouble(MathMax(resistance,PositionGetDouble(POSITION_PRICE_OPEN)),_Digits);
+         double newTP = NormalizeDouble(MathMax(resistance.price,PositionGetDouble(POSITION_PRICE_OPEN)),_Digits);
          double newSL = NormalizeDouble(2*PositionGetDouble(POSITION_PRICE_OPEN) - newTP,_Digits);
          //Check if newSL and newTP aren't both the same (gives error)
          if(!(oldTP==newTP && oldSL==newSL))
@@ -122,7 +131,7 @@ void OnTick()
 
       if(PositionGetInteger(POSITION_TYPE)==POSITION_TYPE_SELL)
         {
-         double newTP = NormalizeDouble(MathMin(support,PositionGetDouble(POSITION_PRICE_OPEN)),_Digits);
+         double newTP = NormalizeDouble(MathMin(support.price,PositionGetDouble(POSITION_PRICE_OPEN)),_Digits);
          double newSL = NormalizeDouble(2*PositionGetDouble(POSITION_PRICE_OPEN) - newTP,_Digits);
          //Check if newSL and newTP aren't both the same (gives error)
          if(!(oldTP==newTP && oldSL==newSL))

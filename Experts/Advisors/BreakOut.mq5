@@ -7,8 +7,10 @@
 #property link      "https://github.com/Entreco/forex_ea"
 #property version   "1.00"
 
-#include "../../Include/Plotting.mqh";
-#include "../../Include/Trading.mqh";
+#include <Zjansson/Trend.mqh>
+#include <Zjansson/Coordinate.mqh>
+#include "../../Include/Zjansson/Plotting.mqh";
+#include "../../Include/Zjansson/Trading.mqh";
 
 //--- input parameters
 input double RiskFactor=0.2;
@@ -16,8 +18,8 @@ input int      MinBars=24;
 input int      MaxBars=96;
 input double   MinVolume=0;
 input double   MaxVolume=10000;
-input double TPMultiplier=0.5;
-input double SLMultiplier=1.0;
+input double TPMultiplier=0.8;
+input double SLMultiplier=0.2;
 input int START_HOUR = 0;
 input int STOP_HOUR = 24;
 
@@ -39,7 +41,7 @@ int OnInit()
 
 // Init CTrade with Default Options
    activeTrade = CreateTradeWithDefaults();
-   
+
    return(INIT_SUCCEEDED);
   }
 //+------------------------------------------------------------------+
@@ -57,15 +59,15 @@ void OnTick()
   {
    MqlRates PriceInformation[];  //create an array for the price data
    ArraySetAsSeries(PriceInformation,true);  //sort the array current candle downwards
-   CopyRates(_Symbol,PERIOD_CURRENT,MinBars,MaxBars-MinBars,PriceInformation); //fill the array with price data
-   
+   CopyRates(_Symbol,PERIOD_CURRENT,1,MaxBars,PriceInformation); //fill the array with price data
+
 // Create Resistance Line
-   double resistance = FindResistance(PriceInformation, MinBars, MaxBars-MinBars);
-   PlotHorizontal("Resistance", resistance, clrRed);
+   Coordinate *resistance = FindResistance(PriceInformation, MinBars, MaxBars-MinBars);
+   PlotHorizontal("Resistance", resistance.price, clrRed);
 
 // Create Support Line
-   double support = FindSupport(PriceInformation, MinBars, MaxBars-MinBars);
-   PlotHorizontal("Support", support, clrBlue);
+   Coordinate *support = FindSupport(PriceInformation, MinBars, MaxBars-MinBars);
+   PlotHorizontal("Support", support.price, clrBlue);
 
 // Dont trade if outside trading hours
    if(outsideTradingHours(START_HOUR,STOP_HOUR))
@@ -78,14 +80,28 @@ void OnTick()
 // Get price
    MqlTick latest_price;     // To be used for getting recent/latest price quotes
    SymbolInfoTick(_Symbol,latest_price); // Get latest price
-   
-   
+
+
 // Plot Trends
-   PlotResistanceTrend(PriceInformation, MaxBars-MinBars);
-   PlotSupportTrend(PriceInformation, MaxBars-MinBars);
+   Trend *resistanceTrend = FindResistanceTrend(PriceInformation, MinBars, MinBars * 3);
+   PlotTrend("Resistance Trend", resistanceTrend, clrRed);
+
+   Trend *supportTrend = FindSupportTrend(PriceInformation, MinBars, MinBars * 3);
+   PlotTrend("Support Trend", supportTrend, clrBlue);
+
 
 // Reset outsideBounds flag condition
-   if(latest_price.bid>=support && latest_price.ask<=resistance)
+
+// THIS IS WRONG -> we will start a trade in
+// situations like these
+//
+//         /\
+//        /  \
+//            \
+// ------------\/---  RESISTANCE LINE -----------
+//
+   double margin = (resistance.price - support.price) / 6;
+   if(latest_price.bid>=(support.price + margin) && latest_price.ask<=(resistance.price - margin))
       outsideBounds=false;
 
 // If outside bounds flag set, return
@@ -97,11 +113,11 @@ void OnTick()
       return;
 
 // Place Buy if price breaks resistance
-   if(latest_price.bid>resistance)
+   if(latest_price.bid>resistance.price)
      {
-      double TPdiff = latest_price.ask-support;
+      double TPdiff = latest_price.ask-support.price;
       double TP = latest_price.ask + TPMultiplier*TPdiff;
-      double SL = latest_price.ask - SLMultiplier*TPdiff;
+      double SL = resistance.price - SLMultiplier*TPdiff;
 
       //PlaceTrade(latest_price.ask,SL,TP,ORDER_TYPE_BUY, RiskFactor);
       Buy(&activeTrade, latest_price.ask, SL, TP, RiskFactor);
@@ -110,11 +126,11 @@ void OnTick()
      }
 
 // Place Sell if price breaks support
-   if(latest_price.ask<support)
+   if(latest_price.ask<support.price)
      {
-      double TPdiff = resistance-latest_price.bid;
+      double TPdiff = resistance.price-latest_price.bid;
       double TP = latest_price.bid - TPMultiplier*TPdiff;
-      double SL = latest_price.bid + SLMultiplier*TPdiff;
+      double SL = support.price + SLMultiplier*TPdiff;
 
       //PlaceTrade(latest_price.bid,SL,TP,ORDER_TYPE_SELL, RiskFactor);
       Sell(&activeTrade, latest_price.bid, SL, TP, RiskFactor);
