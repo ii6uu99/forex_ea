@@ -1,5 +1,5 @@
 //+------------------------------------------------------------------+
-//|                                                     Reversal.mq5 |
+//|                                                BreakOutTrend.mq5 |
 //|                       Copyright 2021, Zjansson Technologies Ltd. |
 //|                              https://github.com/Entreco/forex_ea |
 //+------------------------------------------------------------------+
@@ -19,7 +19,7 @@ input int      MaxBars=96;
 input double   MinVolume=0;
 input double   MaxVolume=10000;
 input double TPMultiplier=0.5;
-input double SLMultiplier=1.0;
+input double SLMultiplier=0.1;
 input int START_HOUR = 0;
 input int STOP_HOUR = 24;
 
@@ -62,12 +62,12 @@ void OnTick()
    CopyRates(_Symbol,PERIOD_CURRENT,1,MaxBars,PriceInformation); //fill the array with price data
 
 // Create Resistance Line
-   //Coordinate *resistance = FindResistance(PriceInformation, MinBars, MaxBars-MinBars);
-   //PlotHorizontal("Resistance", resistance.price, clrRed);
+   Coordinate *resistance = FindResistance(PriceInformation, MinBars, MaxBars-MinBars);
+   PlotHorizontal("Resistance", resistance.price, clrRed);
 
 // Create Support Line
-   //Coordinate *support = FindSupport(PriceInformation, MinBars, MaxBars-MinBars);
-   //PlotHorizontal("Support", support.price, clrBlue);
+   Coordinate *support = FindSupport(PriceInformation, MinBars, MaxBars-MinBars);
+   PlotHorizontal("Support", support.price, clrBlue);
 
 // Dont trade if outside trading hours
    if(outsideTradingHours(START_HOUR,STOP_HOUR))
@@ -94,19 +94,9 @@ void OnTick()
 
 
 // Reset outsideBounds flag condition
-
-// THIS IS WRONG -> we will start a buy in
-// situations like these, where the trend 
-// is going down
-//
-//         /\
-//        /  \
-//            \
-// ------------\/---  RESISTANCE LINE -----------
-//
-   double supportPrice = supportTrend.Predict(TimeCurrent());
-   double resistancePrice = resistanceTrend.Predict(TimeCurrent());
-   if(latest_price.bid>=supportPrice && latest_price.ask<=resistancePrice)
+   double predictedSupportPrice = supportTrend.Predict(TimeCurrent());
+   double predictedResistancePrice = resistanceTrend.Predict(TimeCurrent());
+   if(latest_price.bid>=predictedSupportPrice && latest_price.ask<=predictedResistancePrice)
       outsideBounds=false;
 
 // If outside bounds flag set, return
@@ -118,9 +108,9 @@ void OnTick()
       return;
 
 // Place Buy if price breaks resistance
-   if(latest_price.bid>resistancePrice)
+   if(latest_price.bid>predictedResistancePrice)
      {
-      double TPdiff = latest_price.ask-supportPrice;
+      double TPdiff = latest_price.ask-support.price;
       double TP = latest_price.ask + TPMultiplier*TPdiff;
       double SL = latest_price.ask - SLMultiplier*TPdiff;
 
@@ -131,9 +121,9 @@ void OnTick()
      }
 
 // Place Sell if price breaks support
-   if(latest_price.ask<supportPrice)
+   if(latest_price.ask<predictedSupportPrice)
      {
-      double TPdiff = resistancePrice-latest_price.bid;
+      double TPdiff = resistance.price-latest_price.bid;
       double TP = latest_price.bid - TPMultiplier*TPdiff;
       double SL = latest_price.bid + SLMultiplier*TPdiff;
 

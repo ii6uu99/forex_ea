@@ -30,7 +30,7 @@ void PlotVertical()
   }
 
 //+------------------------------------------------------------------+
-//| Plot at Angle                                             |
+//| Plot Trend line                                                  |
 //+------------------------------------------------------------------+
 void PlotTrend(const string name, Trend *trend, long line = clrAquamarine) export
   {
@@ -40,6 +40,20 @@ void PlotTrend(const string name, Trend *trend, long line = clrAquamarine) expor
    ObjectSetInteger(0,name,OBJPROP_COLOR, line); //set object colour
    ObjectSetInteger(0, name, OBJPROP_RAY_RIGHT, true);
    ObjectSetInteger(0, name, OBJPROP_RAY_LEFT, true);
+
+   PlotDot(DoubleToString(trend.previous.time), trend.previous, clrAzure);
+   PlotDot(DoubleToString(trend.current.time), trend.current, clrAzure);
+  }
+
+//+------------------------------------------------------------------+
+//| Plot a single Dot                                                |
+//+------------------------------------------------------------------+
+void PlotDot(const string name, Coordinate *dot, long line = clrAquamarine)
+  {
+   ObjectCreate(0, name, OBJ_TEXT, 0, dot.time, dot.price);
+   ObjectSetInteger(0,name,OBJPROP_WIDTH,12);     //set object width
+   ObjectSetInteger(0,name,OBJPROP_COLOR, line); //set object colour
+   ObjectSetString(0, name, OBJPROP_TEXT, CharToString(159));
   }
 
 //+------------------------------------------------------------------+

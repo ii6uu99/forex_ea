@@ -21,7 +21,6 @@ Coordinate* FindResistance(const MqlRates &rates[], int start, int count)
    ArraySetAsSeries(High,true);     //sort array from current candle downwards
    CopyHigh(_Symbol,PERIOD_CURRENT,start,count,High);    //fill the array with the high prices
    HighestCandle = ArrayMaximum(High,0,count);
-   datetime co = iTime(_Symbol, PERIOD_CURRENT, HighestCandle);
    return new Coordinate(rates[HighestCandle].time, rates[HighestCandle].high);
   }
 
@@ -40,25 +39,25 @@ Coordinate* FindSupport(const MqlRates &rates[], int start, int count)
 //+------------------------------------------------------------------+
 
 //+------------------------------------------------------------------+
-//| Finds Resistance Trend                                           |
+//| Finds Resistance Trend - Finds 2 Maxima in different time windows|
 //+------------------------------------------------------------------+
 Trend* FindResistanceTrend(const MqlRates &rates[], int start, int count, double weight = 0.3)
   {
    int split = (1.0 * count-start)*weight;
    Coordinate *current = FindResistance(rates, start, split);
-   Coordinate *previous = FindResistance(rates, split, count);
+   Coordinate *previous = FindResistance(rates, count - split, split);
 
    return new Trend(previous, current);
   }
 
 //+------------------------------------------------------------------+
-//| Finds Support Trend                                              |
+//| Finds Support Trend - Finds 2 Minima in different time windows   |
 //+------------------------------------------------------------------+
 Trend* FindSupportTrend(const MqlRates &rates[], int start, int count, double weight = 0.3)
   {
    int split = (1.0 * count-start)*weight;
    Coordinate *current = FindSupport(rates, start, split);
-   Coordinate *previous= FindSupport(rates, split, count);
+   Coordinate *previous= FindSupport(rates, count - split, split);
 
    return new Trend(previous, current);
   }

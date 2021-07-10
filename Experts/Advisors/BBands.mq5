@@ -8,8 +8,8 @@
 #property version   "1.00"
 
 #include <Indicators\Trend.mqh>
-#include "../../Include/Plotting.mqh";
-#include "../../Include/Trading.mqh";
+#include "../../Include/Zjansson/Plotting.mqh";
+#include "../../Include/Zjansson/Trading.mqh";
 
 //--- input parameters
 input double RiskFactor = 0.2;
