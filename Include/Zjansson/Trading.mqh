@@ -8,60 +8,6 @@
 #property version   "1.00"
 
 #include <Trade\Trade.mqh>
-#include <Zjansson\Coordinate.mqh>
-#include <Zjansson\Trend.mqh>
-
-//+------------------------------------------------------------------+
-//| Finds Resistance - Maximum Rate                                  |
-//+------------------------------------------------------------------+
-Coordinate* FindResistance(const MqlRates &rates[], int start, int count)
-  {
-   int HighestCandle;
-   double High[];
-   ArraySetAsSeries(High,true);     //sort array from current candle downwards
-   CopyHigh(_Symbol,PERIOD_CURRENT,start,count,High);    //fill the array with the high prices
-   HighestCandle = ArrayMaximum(High,0,count);
-   return new Coordinate(rates[HighestCandle].time, rates[HighestCandle].high);
-  }
-
-//+------------------------------------------------------------------+
-//| Finds Support - Minimum Rate                                     |
-//+------------------------------------------------------------------+
-Coordinate* FindSupport(const MqlRates &rates[], int start, int count)
-  {
-   int LowestCandle;
-   double Low[];
-   ArraySetAsSeries(Low,true);     //sort array from current candle downwards
-   CopyLow(_Symbol,PERIOD_CURRENT,start,count,Low);    //fill the array with the low prices
-   LowestCandle = ArrayMinimum(Low,0,count);
-   return new Coordinate(rates[LowestCandle].time, rates[LowestCandle].low);
-  }
-//+------------------------------------------------------------------+
-
-//+------------------------------------------------------------------+
-//| Finds Resistance Trend - Finds 2 Maxima in different time windows|
-//+------------------------------------------------------------------+
-Trend* FindResistanceTrend(const MqlRates &rates[], int start, int count, double weight = 0.3)
-  {
-   int split = (1.0 * count-start)*weight;
-   Coordinate *current = FindResistance(rates, start, split);
-   Coordinate *previous = FindResistance(rates, count - split, split);
-
-   return new Trend(previous, current);
-  }
-
-//+------------------------------------------------------------------+
-//| Finds Support Trend - Finds 2 Minima in different time windows   |
-//+------------------------------------------------------------------+
-Trend* FindSupportTrend(const MqlRates &rates[], int start, int count, double weight = 0.3)
-  {
-   int split = (1.0 * count-start)*weight;
-   Coordinate *current = FindSupport(rates, start, split);
-   Coordinate *previous= FindSupport(rates, count - split, split);
-
-   return new Trend(previous, current);
-  }
-
 
 //+------------------------------------------------------------------+
 //|                                                                  |

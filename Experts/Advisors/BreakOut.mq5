@@ -8,7 +8,6 @@
 #property version   "1.00"
 
 #include <Zjansson/Trend.mqh>
-#include <Zjansson/Coordinate.mqh>
 #include "../../Include/Zjansson/Plotting.mqh";
 #include "../../Include/Zjansson/Trading.mqh";
 
@@ -62,12 +61,12 @@ void OnTick()
    CopyRates(_Symbol,PERIOD_CURRENT,1,MaxBars,PriceInformation); //fill the array with price data
 
 // Create Resistance Line
-   //Coordinate *resistance = FindResistance(PriceInformation, MinBars, MaxBars-MinBars);
-   //PlotHorizontal("Resistance", resistance.price, clrRed);
+//Coordinate *resistance = FindResistance(PriceInformation, MinBars, MaxBars-MinBars);
+//PlotHorizontal("Resistance", resistance.price, clrRed);
 
 // Create Support Line
-   //Coordinate *support = FindSupport(PriceInformation, MinBars, MaxBars-MinBars);
-   //PlotHorizontal("Support", support.price, clrBlue);
+//Coordinate *support = FindSupport(PriceInformation, MinBars, MaxBars-MinBars);
+//PlotHorizontal("Support", support.price, clrBlue);
 
 // Dont trade if outside trading hours
    if(outsideTradingHours(START_HOUR,STOP_HOUR))
@@ -86,17 +85,17 @@ void OnTick()
 
 
 // Plot Trends
-   Trend *resistanceTrend = FindResistanceTrend(PriceInformation, 1, MaxBars);
+   Trend *resistanceTrend = FindResistanceTrend(1, MaxBars);
    PlotTrend("Resistance Trend", resistanceTrend, clrRed);
 
-   Trend *supportTrend = FindSupportTrend(PriceInformation, 1, MaxBars);
+   Trend *supportTrend = FindSupportTrend(1, MaxBars);
    PlotTrend("Support Trend", supportTrend, clrBlue);
 
 
 // Reset outsideBounds flag condition
 
 // THIS IS WRONG -> we will start a buy in
-// situations like these, where the trend 
+// situations like these, where the trend
 // is going down
 //
 //         /\

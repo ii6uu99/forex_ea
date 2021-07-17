@@ -57,18 +57,18 @@ void OnTick()
    CopyRates(Symbol(),Period(),MinBars,MaxBars-MinBars,PriceInformation); //fill the array with price data
 
 // Create Resistance Line
-   Coordinate *resistance = FindResistance(PriceInformation, MinBars, MaxBars-MinBars);
+   Coordinate *resistance = FindMaximum(MinBars, MaxBars-MinBars);
    PlotHorizontal("Resistance", resistance.price, clrRed);
 
 // Create Support Line
-   Coordinate *support = FindSupport(PriceInformation, MinBars, MaxBars-MinBars);
+   Coordinate *support = FindMinimum(MinBars, MaxBars-MinBars);
    PlotHorizontal("Support", support.price, clrBlue);
 
 // Plot Trends
-   Trend *resistanceTrend = FindResistanceTrend(PriceInformation, MinBars, MaxBars);
+   Trend *resistanceTrend = FindResistanceTrend(MinBars, MaxBars);
    PlotTrend("Resistance Trend", resistanceTrend, clrDarkRed);
 
-   Trend *supportTrend = FindSupportTrend(PriceInformation, MinBars, MaxBars);
+   Trend *supportTrend = FindSupportTrend(MinBars, MaxBars);
    PlotTrend("Support Trend", supportTrend, clrDarkBlue);
 
 // Dont trade if outside trading hours

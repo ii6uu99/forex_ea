@@ -24,9 +24,19 @@ void PlotHorizontal(const string name, double price, long line) export
 //+------------------------------------------------------------------+
 //| Plot VLINE on current Time                                       |
 //+------------------------------------------------------------------+
-void PlotVertical()
+void PlotVertical(datetime stamp, long line = clrAzure)
   {
-   ObjectCreate(0,TimeToString(TimeCurrent()),OBJ_VLINE,0,TimeCurrent(),0);
+   const string name = TimeToString(stamp);
+   ObjectCreate(0,name,OBJ_VLINE,0,stamp,0);
+   ObjectSetInteger(0,name,OBJPROP_WIDTH,2);     //set object width
+   ObjectSetInteger(0,name,OBJPROP_COLOR, line); //set object colour
+  }
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+void PlotVertical(long line = clrAliceBlue)
+  {
+   PlotVertical(TimeCurrent(), line);
   }
 
 //+------------------------------------------------------------------+
@@ -35,14 +45,14 @@ void PlotVertical()
 void PlotTrend(const string name, Trend *trend, long line = clrAquamarine) export
   {
    ObjectDelete(0, name);
-   ObjectCreate(0, name, OBJ_TREND, 0, trend.previous.time, trend.previous.price, trend.current.time, trend.current.price);
+   ObjectCreate(0, name, OBJ_TREND, 0, trend.start.time, trend.start.price, trend.end.time, trend.end.price);
    ObjectSetInteger(0,name,OBJPROP_WIDTH,2);     //set object width
    ObjectSetInteger(0,name,OBJPROP_COLOR, line); //set object colour
    ObjectSetInteger(0, name, OBJPROP_RAY_RIGHT, true);
    ObjectSetInteger(0, name, OBJPROP_RAY_LEFT, true);
 
-   PlotDot(DoubleToString(trend.previous.time), trend.previous, clrAzure);
-   PlotDot(DoubleToString(trend.current.time), trend.current, clrAzure);
+   PlotDot(DoubleToString(trend.start.time), trend.start, clrAzure);
+   PlotDot(DoubleToString(trend.end.time), trend.end, clrAliceBlue);
   }
 
 //+------------------------------------------------------------------+
@@ -54,14 +64,5 @@ void PlotDot(const string name, Coordinate *dot, long line = clrAquamarine)
    ObjectSetInteger(0,name,OBJPROP_WIDTH,12);     //set object width
    ObjectSetInteger(0,name,OBJPROP_COLOR, line); //set object colour
    ObjectSetString(0, name, OBJPROP_TEXT, CharToString(159));
-  }
-
-//+------------------------------------------------------------------+
-//| Fit line                                                         |
-//+------------------------------------------------------------------+
-void FitLine(const double &rates[]) export
-  {
-   double avg = MathAverageDeviation(rates);
-   printf(avg);
   }
 //+------------------------------------------------------------------+

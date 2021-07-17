@@ -8,7 +8,6 @@
 #property version   "1.00"
 
 #include <Indicators\Trend.mqh>
-#include <Zjansson\Coordinate.mqh>
 #include "../../Include/Zjansson/Plotting.mqh";
 #include "../../Include/Zjansson/Trading.mqh";
 
@@ -57,18 +56,18 @@ void OnTick()
    CopyRates(Symbol(),Period(),MinBars,MaxBars-MinBars,PriceInformation); //fill the array with price data
 
 // Create Resistance Line
-   Coordinate *resistance = FindResistance(PriceInformation, MinBars, MaxBars-MinBars);
+   Coordinate *resistance = FindMaximum(MinBars, MaxBars-MinBars);
    PlotHorizontal("Resistance", resistance.price, clrRed);
 
 // Create Support Line
-   Coordinate *support = FindSupport(PriceInformation, MinBars, MaxBars-MinBars);
+   Coordinate *support = FindMinimum(MinBars, MaxBars-MinBars);
    PlotHorizontal("Support", support.price, clrBlue);
 
 // Plot Trends
-   Trend *resistanceTrend = FindResistanceTrend(PriceInformation, MinBars, MinBars * 5);
+   Trend *resistanceTrend = FindResistanceTrend(MinBars, MinBars * 5);
    PlotTrend("Resistance Trend", resistanceTrend, clrRed);
 
-   Trend *supportTrend = FindSupportTrend(PriceInformation, MinBars, MinBars * 5);
+   Trend *supportTrend = FindSupportTrend(MinBars, MinBars * 5);
    PlotTrend("Support Trend", supportTrend, clrBlue);
 
 // Get current price

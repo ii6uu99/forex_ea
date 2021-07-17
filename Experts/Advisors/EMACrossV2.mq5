@@ -9,7 +9,6 @@
 
 #include <Trade\Trade.mqh>
 #include <Indicators\Trend.mqh>
-#include <Zjansson\Coordinate.mqh>
 #include "../../Include/Zjansson/Plotting.mqh";
 #include "../../Include/Zjansson/Trading.mqh";
 
@@ -64,11 +63,11 @@ void OnTick()
    CopyRates(Symbol(),Period(),MinBars,MaxBars-MinBars,PriceInformation); //fill the array with price data
 
 // Create Resistance Line
-   Coordinate *resistance = FindResistance(PriceInformation, MinBars, MaxBars-MinBars);
+   Coordinate *resistance = FindMaximum(MinBars, MaxBars-MinBars);
    PlotHorizontal("Resistance", resistance.price, clrRed);
 
 // Create Support Line
-   Coordinate *support = FindSupport(PriceInformation, MinBars, MaxBars-MinBars);
+   Coordinate *support = FindMinimum(MinBars, MaxBars-MinBars);
    PlotHorizontal("Support", support.price, clrBlue);
 
 // Check if trade is already open

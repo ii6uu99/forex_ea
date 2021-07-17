@@ -8,18 +8,17 @@
 #property version   "1.00"
 
 #include <Zjansson/Trend.mqh>
-#include <Zjansson/Coordinate.mqh>
 #include "../../Include/Zjansson/Plotting.mqh";
 #include "../../Include/Zjansson/Trading.mqh";
 
 //--- input parameters
 input double RiskFactor=0.2;
-input int      MinBars=24;
-input int      MaxBars=96;
+input int      MinBars=5;
+input int      MaxBars=48;
 input double   MinVolume=0;
 input double   MaxVolume=10000;
 input double TPMultiplier=0.5;
-input double SLMultiplier=0.1;
+input double SLMultiplier=0.5;
 input int START_HOUR = 0;
 input int STOP_HOUR = 24;
 
@@ -61,20 +60,18 @@ void OnTick()
    ArraySetAsSeries(PriceInformation,true);  //sort the array current candle downwards
    CopyRates(_Symbol,PERIOD_CURRENT,1,MaxBars,PriceInformation); //fill the array with price data
 
-// Create Resistance Line
-   Coordinate *resistance = FindResistance(PriceInformation, MinBars, MaxBars-MinBars);
-   PlotHorizontal("Resistance", resistance.price, clrRed);
+// Plot Trends
+   Trend *resistanceTrend = FindResistanceTrend(MinBars, MaxBars);
+   PlotTrend("Resistance Trend", resistanceTrend, clrRed);
 
-// Create Support Line
-   Coordinate *support = FindSupport(PriceInformation, MinBars, MaxBars-MinBars);
-   PlotHorizontal("Support", support.price, clrBlue);
+   Trend *supportTrend = FindSupportTrend(MinBars, MaxBars);
+   PlotTrend("Support Trend", supportTrend, clrBlue);
 
 // Dont trade if outside trading hours
    if(outsideTradingHours(START_HOUR,STOP_HOUR))
      {
       return;
      }
-
 
 // Dont Trade if trade already active
    if(PositionSelect(_Symbol)==true)   // if we already have an opened position, return
@@ -83,15 +80,6 @@ void OnTick()
 // Get price
    MqlTick latest_price;     // To be used for getting recent/latest price quotes
    SymbolInfoTick(_Symbol,latest_price); // Get latest price
-
-
-// Plot Trends
-   Trend *resistanceTrend = FindResistanceTrend(PriceInformation, 1, MaxBars);
-   PlotTrend("Resistance Trend", resistanceTrend, clrRed);
-
-   Trend *supportTrend = FindSupportTrend(PriceInformation, 1, MaxBars);
-   PlotTrend("Support Trend", supportTrend, clrBlue);
-
 
 // Reset outsideBounds flag condition
    double predictedSupportPrice = supportTrend.Predict(TimeCurrent());
@@ -107,10 +95,14 @@ void OnTick()
    if(Volume() < MinVolume || Volume() > MaxVolume)
       return;
 
+// Fit Line
+   Trend *fit = FitLine(20);
+   PlotTrend("Fit", fit, clrBisque);
+
 // Place Buy if price breaks resistance
    if(latest_price.bid>predictedResistancePrice)
      {
-      double TPdiff = latest_price.ask-support.price;
+      double TPdiff = latest_price.ask-predictedSupportPrice;
       double TP = latest_price.ask + TPMultiplier*TPdiff;
       double SL = latest_price.ask - SLMultiplier*TPdiff;
 
@@ -123,7 +115,7 @@ void OnTick()
 // Place Sell if price breaks support
    if(latest_price.ask<predictedSupportPrice)
      {
-      double TPdiff = resistance.price-latest_price.bid;
+      double TPdiff = predictedResistancePrice-latest_price.bid;
       double TP = latest_price.bid - TPMultiplier*TPdiff;
       double SL = latest_price.bid + SLMultiplier*TPdiff;
 
