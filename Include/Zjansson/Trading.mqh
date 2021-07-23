@@ -19,16 +19,16 @@ void PlaceTrade(double price,double stopLoss,double takeProfit,int orderType, do
    MqlTradeResult mresult;    // To be used to get our trade results
    ZeroMemory(mrequest);
 
-   mrequest.action = TRADE_ACTION_DEAL;                                 // immediate order execution
-   mrequest.price = NormalizeDouble(price,_Digits);          // latest Bid price
-   mrequest.sl = NormalizeDouble(stopLoss,_Digits); // Stop Loss
-   mrequest.tp = NormalizeDouble(takeProfit,_Digits); // Take Profit
-   mrequest.symbol = _Symbol;                                         // currency pair
-   mrequest.volume = ComputeLot(riskFactor);                                  // number of lots to trade
-   mrequest.magic = 34567;                                        // Order Magic Number
-   mrequest.type= orderType;                                     // Sell Order
-   mrequest.type_filling = ORDER_FILLING_FOK;                          // Order execution type
-   mrequest.deviation=100;                                           // Deviation from current price
+   mrequest.action = TRADE_ACTION_DEAL;                  // immediate order execution
+   mrequest.price = NormalizeDouble(price,_Digits);      // latest Bid price
+   mrequest.sl = NormalizeDouble(stopLoss,_Digits);      // Stop Loss
+   mrequest.tp = NormalizeDouble(takeProfit,_Digits);    // Take Profit
+   mrequest.symbol = _Symbol;                            // currency pair
+   mrequest.volume = ComputeLot(riskFactor);             // number of lots to trade
+   mrequest.magic = 34567;                               // Order Magic Number
+   mrequest.type= orderType;                             // Sell Order
+   mrequest.type_filling = ORDER_FILLING_FOK;            // Order execution type
+   mrequest.deviation=100;                               // Deviation from current price
 
 // send order
    OrderSend(mrequest,mresult);
@@ -114,7 +114,23 @@ void SellStop(CTrade* trade, double price,double stopLoss,double takeProfit, dou
    trade.SellStop(volume, _Symbol, normalPrice, normalStopLoss, normalTakeProfit, typeMime, expirationTime, "SellStop");
   }
 
+//+------------------------------------------------------------------+
+//| Open a Position                                                  |
+//+------------------------------------------------------------------+
+void Open(CTrade* trade, double price, const ENUM_ORDER_TYPE type, double riskFactor)
+  {
+   double volume = ComputeLot(riskFactor);
+   double normalPrice = SymbolInfoDouble(_Symbol, type==ORDER_TYPE_SELL? SYMBOL_BID : SYMBOL_ASK);
+   trade.PositionOpen(_Symbol, type, volume, price, 0, 0);
+  }
 
+//+------------------------------------------------------------------+
+//| Close a Position                                                 |
+//+------------------------------------------------------------------+
+void Close(CTrade* trade, ulong deviation = -1)
+  {
+   trade.PositionClose(_Symbol, deviation);
+  }
 
 //+------------------------------------------------------------------+
 //|                                                                  |
@@ -166,7 +182,7 @@ double Volume()
 //+------------------------------------------------------------------+
 
 //+------------------------------------------------------------------+
-//| Compute Average True Range in points, default period = PERIOD_D1                           |
+//| Compute Average True Range in points, default period = PERIOD_D1 |
 //+------------------------------------------------------------------+
 int ComputeATR(int lookBack, ENUM_TIMEFRAMES period = PERIOD_D1)
   {
@@ -207,10 +223,10 @@ void ModifyTrade(long ticket,double newTP, double newSL)
    MqlTradeResult mresult;    // To be used to get our trade results
    ZeroMemory(mrequest);
 
-   mrequest.action  =TRADE_ACTION_SLTP; // type of trade operation
-   mrequest.position=ticket;   // ticket of the position
-   mrequest.tp      =NormalizeDouble(newTP,_Digits);                // Take Profit of the position
-   mrequest.sl      =NormalizeDouble(newSL,_Digits);                // Take Profit of the position
+   mrequest.action  =TRADE_ACTION_SLTP;               // type of trade operation
+   mrequest.position=ticket;                          // ticket of the position
+   mrequest.tp      =NormalizeDouble(newTP,_Digits);  // Take Profit of the position
+   mrequest.sl      =NormalizeDouble(newSL,_Digits);  // Take Profit of the position
 
    OrderSend(mrequest,mresult);
   }

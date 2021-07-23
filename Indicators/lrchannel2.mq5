@@ -26,10 +26,10 @@
 #property indicator_color3  Yellow
 #property indicator_color4  Red
 #property indicator_color5  Red
-#property indicator_applied_price PRICE_CLOSE
+#property indicator_applied_price PRICE_HIGH
 //--- input params
-input int InChPeriod = 150; //Channel Period
-input int Shift = 0; // Shift of price bars
+input int InChPeriod = 72; //Channel Period
+input int Shift = 1; // Shift of price bars
 
 int ExChPeriod,rCount;
 //---- buffers
