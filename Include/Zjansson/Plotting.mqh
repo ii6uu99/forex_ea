@@ -7,8 +7,8 @@
 #property link      "https://github.com/Entreco/forex_ea"
 #property version   "1.00"
 
-#include <Zjansson\Trend.mqh>;
-#include <Math\Stat\Math.mqh>;
+#include "Trend.mqh"
+#include <Math\Stat\Math.mqh>
 
 //+------------------------------------------------------------------+
 //| Plot Horizontal Line                                             |

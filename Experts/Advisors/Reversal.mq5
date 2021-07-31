@@ -7,9 +7,9 @@
 #property link      "https://github.com/Entreco/forex_ea"
 #property version   "1.00"
 
-#include <Zjansson\Coordinate.mqh>
-#include "../../Include/Zjansson/Plotting.mqh";
-#include "../../Include/Zjansson/Trading.mqh";
+#include "../../Include/Zjansson/Coordinate.mqh"
+#include "../../Include/Zjansson/Plotting.mqh"
+#include "../../Include/Zjansson/Trading.mqh"
 
 //--- input parameters
 input double RiskFactor=0.2;

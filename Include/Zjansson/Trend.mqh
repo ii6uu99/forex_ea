@@ -8,7 +8,7 @@
 #property version   "1.00"
 
 #include <Object.mqh>
-#include <Zjansson\Coordinate.mqh>
+#include "Coordinate.mqh"
 
 //+------------------------------------------------------------------+
 //|                                                                  |
